@@ -1,0 +1,48 @@
+{
+  "name": "EvaQueue.js",
+  "version": "0.0.1",
+  "description": "Message queue and topic for EvaEngine.js",
+  "main": "src/index.js",
+  "scripts": {
+    "lint": "eslint src/* --ext .js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bmqb/EvaQueue.js.git"
+  },
+  "keywords": [],
+  "license": "MIT",
+  "author": "",
+  "bugs": {
+    "url": "https://github.com/bmqb/EvaQueue.js/issues"
+  },
+  "homepage": "https://github.com/bmqb/EvaQueue.js#readme",
+  "engines": {
+    "node": ">=6.9.1"
+  },
+  "pre-commit": [
+    "lint"
+  ],
+  "dependencies": {
+    "ali-mns": "^2.6.4",
+    "kue": "^0.11.6",
+    "lodash": "^4.17.4"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-core": "^6.26.0",
+    "babel-eslint": "^8.0.1",
+    "babel-plugin-transform-decorators-legacy": "^1.3.4",
+    "babel-plugin-transform-object-rest-spread": "^6.26.0",
+    "babel-polyfill": "^6.26.0",
+    "babel-preset-es2015-node6": "^0.4.0",
+    "babel-preset-stage-3": "^6.24.1",
+    "eslint": "^4.8.0",
+    "eslint-config-airbnb": "^16.0.0",
+    "eslint-plugin-import": "^2.7.0",
+    "eslint-plugin-jsx-a11y": "^6.0.2",
+    "eslint-plugin-react": "^7.4.0",
+    "pre-commit": "^1.2.2"
+  }
+}
