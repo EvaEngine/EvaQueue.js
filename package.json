@@ -1,8 +1,8 @@
 {
   "name": "evaqueue",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Message queue and topic for EvaEngine.js",
-  "main": "src/index.js",
+  "main": "index.js",
   "scripts": {
     "build": "gulp build",
     "lint": "eslint src/* --ext .js",
