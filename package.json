@@ -1,9 +1,10 @@
 {
   "name": "evaqueue",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Message queue and topic for EvaEngine.js",
   "main": "src/index.js",
   "scripts": {
+    "build": "gulp build",
     "lint": "eslint src/* --ext .js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -43,6 +44,9 @@
     "eslint-plugin-import": "^2.7.0",
     "eslint-plugin-jsx-a11y": "^6.0.2",
     "eslint-plugin-react": "^7.4.0",
+    "gulp": "^3.9.1",
+    "gulp-babel": "^7.0.0",
+    "gulp-sourcemaps": "^2.6.1",
     "pre-commit": "^1.2.2"
   }
 }
