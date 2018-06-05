@@ -3,7 +3,7 @@ import assert from 'assert';
 import find from 'lodash/find';
 import AliMNS from 'ali-mns';
 
-import { Message } from './message';
+import { Message } from '../src/message';
 
 //////////////////////////////////////////////////////////////////////////////
 

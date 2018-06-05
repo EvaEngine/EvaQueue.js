@@ -1,6 +1,16 @@
-import assert from 'assert';
+import { MessageInterface } from './interfaces';
 
-export class Message {
+export default class Message implements MessageInterface {
+  messageId: string;
+  messageHash: string;
+  content: object;
+  priority: number;
+  delay: number;
+  traceId: string;
+  parentId: string;
+  enqueueAt: number;
+  ack: string;
+
   getMessageId() {
     return this.messageId;
   }
@@ -52,7 +62,7 @@ export class Message {
       this.getMessageId(),
       this.getTraceId(),
       this.getParentId(),
-      JSON.stringify(this.content)
+      JSON.stringify(this.content),
     ].join(' | ');
   }
 
@@ -63,9 +73,17 @@ export class Message {
     return JSON.stringify(this.content);
   }
 
-  assign({
-    priority, delay = 0, ack, enqueueAt, messageId, messageHash, traceId, parentId
-  }) {
+  assign(msg: MessageInterface) {
+    const {
+      priority,
+      delay = 0,
+      ack,
+      enqueueAt,
+      messageId,
+      messageHash,
+      traceId,
+      parentId,
+    } = msg;
     this.priority = priority;
     this.delay = delay;
     this.messageId = messageId;
@@ -77,10 +95,18 @@ export class Message {
     return this;
   }
 
-  constructor(content, {
-    priority, delay = 0, ack, enqueueAt, messageId, messageHash, traceId, parentId
-  } = {}) {
-    assert(content, 'Message require content input');
+  constructor(msg: MessageInterface) {
+    const {
+      content,
+      priority,
+      delay = 0,
+      ack,
+      enqueueAt,
+      messageId,
+      messageHash,
+      traceId,
+      parentId,
+    } = msg;
     this.content = content;
     this.priority = priority;
     this.delay = delay;
@@ -93,4 +119,7 @@ export class Message {
   }
 }
 
-export default { Message };
+export class CommandMessage extends Message {
+  getCommand() {
+  }
+}
