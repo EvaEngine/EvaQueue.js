@@ -1,16 +1,15 @@
 {
   "name": "evaqueue",
-  "version": "0.0.5",
-  "description": "Message queue and topic for EvaEngine.js",
+  "version": "0.0.0",
+  "description": "message queue",
   "main": "index.js",
   "scripts": {
-    "pretest": "npm run build",
     "prestart": "npm run build",
-    "prepublish": "rm -rf ./lib && npm run build",
+    "prepublish": "rm -rf lib && tsc -m \"System\" --outFile \"lib/index\" --sourceMap \"false\" && rm lib/index && tsc",
     "ava": "LOG_LEVEL=error NODE_ENV=test ava --verbose --serial",
     "test": "nyc -a --reporter=lcov --reporter=text --reporter=html npm run ava",
-    "lint": "eslint src/* --ext .js",
-    "build": "babel -d lib/ src/"
+    "lint": "tslint src/*",
+    "build": "rm -rf lib && tsc -m \"System\" --outFile \"lib/index\" --sourceMap \"false\" && rm lib/index && tsc"
   },
   "repository": {
     "type": "git",
@@ -24,63 +23,58 @@
   },
   "homepage": "https://github.com/bmqb/EvaQueue.js#readme",
   "engines": {
-    "node": ">=6.9.1"
+    "node": ">=8.0.0"
   },
   "ava": {
     "files": [
-      "test/**/*.js",
-      "!test/bootstrap.js",
-      "!test/_*/**/*.js",
-      "!test/swagger/_*/**/*.js"
+      "test/**/*.ts"
     ],
-    "source": [
-      "src/**/*.js"
+    "sources": [
+      "src/**/*.ts"
     ],
     "failFast": false,
     "tap": false,
     "require": [
-      "babel-core/register",
-      "babel-polyfill"
+      "ts-node/register"
     ],
-    "babel": "inherit"
+    "extensions": [
+      "ts"
+    ],
+    "babel": false
   },
   "nyc": {
+    "extension": [
+      ".ts"
+    ],
     "require": [
-      "babel-core/register"
+      "ts-node/register"
     ],
     "include": [
-      "src/**/*.js"
+      "src/**/*.ts"
     ],
     "exclude": [
-      "src/config/index.js"
-    ]
+      "lib/**/*",
+      "src/@types/ali-mns/index.d.ts"
+    ],
+    "sourceMap": true
   },
-  "pre-commit": [
-    "lint"
-  ],
+  "pre-commit": [],
   "dependencies": {
-    "ali-mns": "^2.6.4",
-    "babel-polyfill": "^6.26.0",
-    "kue": "^0.11.6",
-    "lodash": "^4.17.4"
+    "lodash": "^4.17.10"
+  },
+  "peerDependencies": {
+    "ali-mns": "^2.6.5",
+    "kafka-node": "^2.6.1"
   },
   "devDependencies": {
-    "ava": "^0.19.1",
-    "babel-cli": "^6.26.0",
-    "babel-core": "^6.26.0",
-    "babel-eslint": "^8.0.1",
-    "babel-plugin-__coverage__": "^11.0.0",
-    "babel-plugin-transform-builtin-extend": "^1.1.2",
-    "babel-plugin-transform-class-properties": "^6.24.1",
-    "babel-plugin-transform-object-rest-spread": "^6.26.0",
-    "babel-preset-es2015-node6": "^0.4.0",
-    "babel-preset-stage-3": "^6.24.1",
-    "eslint": "^4.8.0",
-    "eslint-config-airbnb": "^16.0.0",
-    "eslint-plugin-import": "^2.7.0",
-    "eslint-plugin-jsx-a11y": "^6.0.2",
-    "eslint-plugin-react": "^7.4.0",
-    "nyc": "^11.0.2",
-    "pre-commit": "^1.2.2"
+    "@types/lodash": "^4.14.109",
+    "ava": "^1.0.0-beta.5.1",
+    "nodemon": "^1.17.5",
+    "nyc": "^12.0.2",
+    "pre-commit": "^1.2.2",
+    "ts-node": "^6.1.0",
+    "tslint": "^5.10.0",
+    "tslint-config-airbnb": "^5.9.2",
+    "typescript": "^2.9.1"
   }
 }
