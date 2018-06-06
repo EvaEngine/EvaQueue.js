@@ -29,5 +29,3 @@ const convertCase = (oldObject: any, converterFunction: (v: string) => string) =
 
 export const toCamelCase = (obj: object) => convertCase(obj, camelCase);
 export const toSnakeCase = (obj: object) => convertCase(obj, snakeCase);
-
-export default { toCamelCase, toSnakeCase };

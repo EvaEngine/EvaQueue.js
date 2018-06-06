@@ -8,7 +8,7 @@
     "prepublish": "rm -rf lib && tsc -m \"System\" --outFile \"lib/index\" --sourceMap \"false\" && rm lib/index && tsc",
     "ava": "LOG_LEVEL=error NODE_ENV=test ava --verbose --serial",
     "test": "nyc -a --reporter=lcov --reporter=text --reporter=html npm run ava",
-    "lint": "tslint src/*",
+    "lint": "tslint src/**/*.ts --exclude '**/*.d.ts' --project tsconfig.json",
     "build": "rm -rf lib && tsc -m \"System\" --outFile \"lib/index\" --sourceMap \"false\" && rm lib/index && tsc"
   },
   "repository": {
@@ -58,7 +58,9 @@
     ],
     "sourceMap": true
   },
-  "pre-commit": [],
+  "pre-commit": [
+    "lint"
+  ],
   "dependencies": {
     "lodash": "^4.17.10"
   },
