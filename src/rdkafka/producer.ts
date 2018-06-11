@@ -1,5 +1,7 @@
 import * as Kafka from 'node-rdkafka';
-
+import {
+  RDKafkaProducerConfigInterface,
+} from './interfaces';
 import {
   ConnectingError,
   DisconnectError,
@@ -16,15 +18,15 @@ export abstract class KafkaBasicProducer {
   protected dead: boolean;
   protected flushing: boolean;
 
-  constructor(conf: any, topicConf: any = {}) {
+  constructor(conf: RDKafkaProducerConfigInterface, topicConf: any = {}) {
     this.dead = false;
     this.flushing = false;
     this.client = new Kafka.Producer(conf, topicConf);
 
-    this.setGraceulDeath();
+    this.setGracefulDeath();
   }
 
-  abstract async graceulDead(): Promise<boolean>;
+  abstract async gracefulDead(): Promise<boolean>;
 
   disconnect() {
     return new Promise((resolve, reject) => {
@@ -65,25 +67,25 @@ export abstract class KafkaBasicProducer {
     });
   }
 
-  private setGraceulDeath() {
-    const graceulDeath = async () => {
+  private setGracefulDeath() {
+    const gracefulDeath = async () => {
       console.log('Producer graceul death begin');
 
       this.dead = true;
-      await this.graceulDead();
+      await this.gracefulDead();
       await this.disconnect();
 
       console.log('Producer graceul death success');
       process.exit(0);
     };
-    process.on('SIGINT', graceulDeath);
-    process.on('SIGQUIT', graceulDeath);
-    process.on('SIGTERM', graceulDeath);
+    process.on('SIGINT', gracefulDeath);
+    process.on('SIGQUIT', gracefulDeath);
+    process.on('SIGTERM', gracefulDeath);
   }
 }
 
 export default class RDKafkaProducer extends KafkaBasicProducer {
-  async graceulDead() {
+  async gracefulDead() {
     await this.flush(FLUSH_TIMEOUT);
     return true;
   }
@@ -106,13 +108,13 @@ export default class RDKafkaProducer extends KafkaBasicProducer {
           .produce(topic, partition, Buffer.from(message), key, timestamp || Date.now(), opaque);
         resolve();
       } catch (err) {
-        if (err.code === ERROR_CODES.ERR__QUEUE_FULL) {
-          // flush all queued messages
-          return this.flush(FLUSH_TIMEOUT)
-            .then(() => {
-              resolve();
-            });
-        }
+        // flush all queued messages
+        // if (err.code === ERROR_CODES.ERR__QUEUE_FULL) {
+        //   return this.flush(FLUSH_TIMEOUT)
+        //     .then(() => {
+        //       resolve();
+        //     });
+        // }
         reject(new ProducerRuntimeError(err.message));
       }
     });

@@ -1,7 +1,13 @@
 import * as _ from 'lodash';
 import * as Kafka from 'node-rdkafka';
 
-import { TopicPartition, KafkaMetadata, KafkaMessage, KafkaMessageError } from './types';
+import {
+  RDTopicPartitionInterface,
+  RDKafkaMetadataInterface,
+  RDKafkaMessageInterface,
+  RDKafkaMessageErrorInterface,
+  RDKafkaConsumerConfigInterface,
+} from './interfaces';
 import {
   ConnectingError,
   DisconnectError,
@@ -31,7 +37,7 @@ export abstract class KafkaBasicConsumer {
   protected offsetStore: { [key: string]: { [key: number]: number } } = {};
   protected errOffsetStore: { [key: string]: { [key: number]: number } } = {};
 
-  constructor(conf: any, topicConf: any = {}) {
+  constructor(conf: RDKafkaConsumerConfigInterface, topicConf: any = {}) {
     this.dead = false;
     this.topics = [];
 
@@ -55,10 +61,10 @@ export abstract class KafkaBasicConsumer {
 
     this.consumer = new Kafka.KafkaConsumer(conf, topicConf);
 
-    this.setGraceulDeath();
+    this.setGracefulDeath();
   }
 
-  abstract async graceulDead(): Promise<boolean>;
+  abstract async gracefulDead(): Promise<boolean>;
 
   disconnect() {
     return new Promise((resolve, reject) => {
@@ -85,20 +91,20 @@ export abstract class KafkaBasicConsumer {
     });
   }
 
-  private setGraceulDeath() {
-    const graceulDeath = async () => {
+  private setGracefulDeath() {
+    const gracefulDeath = async () => {
       console.log('Consumer graceul death begin');
 
       this.dead = true;
-      await this.graceulDead();
+      await this.gracefulDead();
       await this.disconnect();
 
       console.log('Consumer graceul death success');
       process.exit(0);
     };
-    process.on('SIGINT', graceulDeath);
-    process.on('SIGQUIT', graceulDeath);
-    process.on('SIGTERM', graceulDeath);
+    process.on('SIGINT', gracefulDeath);
+    process.on('SIGQUIT', gracefulDeath);
+    process.on('SIGTERM', gracefulDeath);
   }
 
   async subscribe(topics: string[]) {
@@ -114,9 +120,9 @@ export abstract class KafkaBasicConsumer {
     this.consumer.unsubscribe();
   }
 
-  getMetadata(metadataOptions: any): Promise<KafkaMetadata> {
+  getMetadata(metadataOptions: any): Promise<RDKafkaMetadataInterface> {
     return new Promise((resolve, reject) => {
-      this.consumer.getMetadata(metadataOptions, (err: Error, data: KafkaMetadata) => {
+      this.consumer.getMetadata(metadataOptions, (err: Error, data: RDKafkaMetadataInterface) => {
         if (err) {
           reject(new MetadataError(err.message));
         }
@@ -125,7 +131,7 @@ export abstract class KafkaBasicConsumer {
     });
   }
 
-  seek(toppar: TopicPartition, timeout: number) {
+  seek(toppar: RDTopicPartitionInterface, timeout: number) {
     return new Promise((resolve, reject) => {
       this.consumer.seek(toppar, timeout, (err: Error) => {
         if (err) {
@@ -185,7 +191,7 @@ export abstract class KafkaBasicConsumer {
 
 // `At Most Once` Consumer
 export class RDKafkaConsumer extends KafkaBasicConsumer {
-  constructor(conf: any, topicConf: any = {}) {
+  constructor(conf: RDKafkaConsumerConfigInterface, topicConf: any = {}) {
     ifNotExistedAndSet(conf, 'enable.auto.commit', true);
     ifNotExistedAndSet(conf, 'enable.auto.offset.store', true);
     ifNotExistedAndSet(conf, 'auto.commit.interval.ms', 500);
@@ -193,7 +199,7 @@ export class RDKafkaConsumer extends KafkaBasicConsumer {
     super(conf, topicConf);
   }
 
-  async graceulDead(): Promise<boolean> {
+  async gracefulDead(): Promise<boolean> {
     return true;
   }
 
@@ -204,32 +210,33 @@ export class RDKafkaConsumer extends KafkaBasicConsumer {
   }
 
   async consume(
-    cb: (message: KafkaMessage) => any,
+    cb: (message: RDKafkaMessageInterface) => any,
     size: number = 3,
   ): Promise<boolean> {
     let success = true;
     return new Promise<boolean>((resolve, reject) => {
       // This will keep going until it gets ERR__PARTITION_EOF or ERR__TIMED_OUT
-      return this.consumer.consume(size, async (err: Error, messages: KafkaMessage[]) => {
-        if (this.dead) {
-          reject(new ConnectionDeadError('Connection has been dead or is dying'));
-        }
-        if (err) {
-          reject(new ConsumerRuntimeError(err.message));
-        }
-        try {
-          await Promise.all(messages.map(async (message) => {
-            try {
-              await Promise.resolve(cb(message));
-            } catch (e) {
-              success = false;
-            }
-          }));
-        } catch (e) {
-          reject(new ConsumerRuntimeError(err.message));
-        }
-        return resolve(success);
-      });
+      return this.consumer
+        .consume(size, async (err: Error, messages: RDKafkaMessageInterface[]) => {
+          if (this.dead) {
+            reject(new ConnectionDeadError('Connection has been dead or is dying'));
+          }
+          if (err) {
+            reject(new ConsumerRuntimeError(err.message));
+          }
+          try {
+            await Promise.all(messages.map(async (message) => {
+              try {
+                await Promise.resolve(cb(message));
+              } catch (e) {
+                success = false;
+              }
+            }));
+          } catch (e) {
+            reject(new ConsumerRuntimeError(err.message));
+          }
+          return resolve(success);
+        });
     });
   }
 }
