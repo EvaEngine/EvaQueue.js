@@ -1,5 +1,6 @@
 import * as Kafka from 'node-rdkafka';
 import {
+  RDKafkaMessageInterface,
   RDKafkaProducerConfigInterface,
 } from './interfaces';
 import {
@@ -23,7 +24,7 @@ export abstract class KafkaBasicProducer {
     this.flushing = false;
     this.client = new Kafka.Producer(conf, topicConf);
 
-    this.setGracefulDeath();
+    // this.setGracefulDeath();
   }
 
   abstract async gracefulDead(): Promise<boolean>;
@@ -90,14 +91,14 @@ export default class RDKafkaProducer extends KafkaBasicProducer {
     return true;
   }
 
-  async produce(
-    topic: string,
-    partition: number,
-    message: string,
-    key?: string,
-    timestamp?: string,
-    opaque?: string,
-  ) {
+  async produce(rdMsg: RDKafkaMessageInterface) {
+    const {
+      topic,
+      partition,
+      value,
+      key,
+      timestamp,
+    } = rdMsg;
     return new Promise((resolve, reject) => {
       if (this.dead) {
         reject(new ConnectionDeadError('Connection has been dead or is dying'));
@@ -105,7 +106,7 @@ export default class RDKafkaProducer extends KafkaBasicProducer {
       try {
         // synchronously
         this.client
-          .produce(topic, partition, Buffer.from(message), key, timestamp || Date.now(), opaque);
+          .produce(topic, partition, value, key, timestamp || Date.now());
         resolve();
       } catch (err) {
         // flush all queued messages

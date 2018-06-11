@@ -39,8 +39,6 @@ export interface ConsumerInterface {
   receive(): Promise<MessageInterface>;
 
   receiving(callback: () => {}, maxProcessing: number): void;
-
-  pause(): Promise<void>;
 }
 
 export interface ConfigInterface {

@@ -61,7 +61,7 @@ export abstract class KafkaBasicConsumer {
 
     this.consumer = new Kafka.KafkaConsumer(conf, topicConf);
 
-    this.setGracefulDeath();
+    // this.setGracefulDeath();
   }
 
   abstract async gracefulDead(): Promise<boolean>;
@@ -190,7 +190,7 @@ export abstract class KafkaBasicConsumer {
 }
 
 // `At Most Once` Consumer
-export class RDKafkaConsumer extends KafkaBasicConsumer {
+export default class RDKafkaConsumer extends KafkaBasicConsumer {
   constructor(conf: RDKafkaConsumerConfigInterface, topicConf: any = {}) {
     ifNotExistedAndSet(conf, 'enable.auto.commit', true);
     ifNotExistedAndSet(conf, 'enable.auto.offset.store', true);

@@ -1,15 +1,17 @@
 {
   "name": "evaqueue",
-  "version": "0.0.0",
-  "description": "message queue",
+  "version": "0.0.0-development",
+  "description": "EvaQueue.js provide a unified API across different high performance queue backends, including Kafka, AliMNS",
   "main": "index.js",
   "scripts": {
     "prestart": "npm run build",
-    "prepublish": "rm -rf lib && tsc -m \"System\" --outFile \"lib/index\" --sourceMap \"false\" && rm lib/index && tsc",
+    "prepublish": "npm run build",
     "ava": "LOG_LEVEL=error NODE_ENV=test ava --verbose --serial",
     "test": "nyc -a --reporter=lcov --reporter=text --reporter=html npm run ava",
     "lint": "tslint src/**/*.ts --exclude '**/*.d.ts' --project tsconfig.json",
-    "build": "rm -rf lib && tsc -m \"System\" --outFile \"lib/index\" --sourceMap \"false\" && rm lib/index && tsc"
+    "build": "rm -rf lib && tsc -m \"System\" --outFile \"lib/index\" --sourceMap \"false\" && rm lib/index && tsc",
+    "install:peers": "npm install --no-save $(jq -r '.peerDependencies | to_entries | map(\"\\(.key)@\\(.value | tostring)\") | join(\" \")' package.json)",
+    "install:peers:mac": "CPPFLAGS=-I/usr/local/opt/openssl/include LDFLAGS=-L/usr/local/opt/openssl/lib npm install --no-save $(jq -r '.peerDependencies | to_entries | map(\"\\(.key)@\\(.value | tostring)\") | join(\" \")' package.json)"
   },
   "repository": {
     "type": "git",
@@ -66,10 +68,11 @@
   },
   "peerDependencies": {
     "ali-mns": "^2.6.5",
-    "kafka-node": "^2.6.1"
+    "node-rdkafka": "^2.3.3"
   },
   "devDependencies": {
     "@types/lodash": "^4.14.109",
+    "@types/node": "^10.3.1",
     "ava": "^1.0.0-beta.5.1",
     "nodemon": "^1.17.5",
     "nyc": "^12.0.2",
