@@ -1,3 +1,4 @@
+import AliMNS from 'ali-mns';
 import Message from './message';
 import { toCamelCase } from './utils/case_converter';
 import {
@@ -44,13 +45,19 @@ export class MnsMessage extends Message {
   }
 }
 
-export class MnsProducer implements ProducerInterface {
-  mq: any;
+export class MnsProducer implements ProducerInterface<AliMNS.MQ> {
+  client: AliMNS.MQ;
   logger: LoggerInterface;
+  name: string;
 
-  constructor(input: { mq: any, logger: LoggerInterface }) {
-    this.mq = input.mq;
+  constructor(input: { client: AliMNS.MQ, logger: LoggerInterface }) {
+    this.client = input.client;
     this.logger = input.logger;
+    this.name = process.env.PRODUCER_NAME || `${require('os').hostname()}-${process.pid}`;
+  }
+
+  getClient() {
+    return this.client;
   }
 
   /**
@@ -58,36 +65,42 @@ export class MnsProducer implements ProducerInterface {
    * @returns {Promise<Message>}
    */
   async produce(message: Message): Promise<Message> {
-    await this.mq.sendP(message.toString());
+    await this.client.sendP(message.toString());
     return message;
   }
 }
 
-export class MnsConsumer implements ConsumerInterface {
-  mq: any;
+export class MnsConsumer implements ConsumerInterface<AliMNS.MQ> {
+  name: string;
+  client: AliMNS.MQ;
   logger: LoggerInterface;
   processing: 0;
 
   paused: Boolean = false;
   stopped: Boolean = false;
 
-  constructor(input: { mq: any, logger: LoggerInterface }) {
-    this.mq = input.mq;
+  constructor(input: { client: AliMNS.MQ, logger: LoggerInterface }) {
+    this.client = input.client;
     this.logger = input.logger;
+    this.name = process.env.CONSUMER_NAME || `${require('os').hostname()}-${process.pid}`;
+  }
+
+  getClient() {
+    return this.client;
   }
 
   async consume(message: MessageInterface, callback: (v: MessageInterface) => {}) {
-    await this.mq.deleteP(message.ack);
+    await this.client.deleteP(message.ack);
     await callback(message);
   }
 
   async receive(): Promise<MessageInterface> {
-    const mnsMessage = await this.mq.recvP();
+    const mnsMessage = await this.client.recvP();
     return MnsMessage.factory(mnsMessage);
   }
 
   async pause() {
-    await this.mq.notifyStopP();
+    await this.client.notifyStopP();
     this.paused = true;
   }
 
@@ -105,7 +118,7 @@ export class MnsConsumer implements ConsumerInterface {
     const receiver = (err: Error, mnsMessage: object) => {
       (async () => {
         this.processing += 1;
-        this.logger.info('[Consume started] consumer processing:', this.processing);
+        this.logger.info('[Consume %s started] consumer processing:', this.name, this.processing);
         if (this.processing >= maxProcessing) {
           await this.pause();
         }
@@ -113,11 +126,11 @@ export class MnsConsumer implements ConsumerInterface {
           await callback(err, mnsMessage ? MnsMessage.factory(mnsMessage) : null);
         } finally {
           this.processing -= 1;
-          this.logger.info('[Consume ended] consumer processing:', this.processing);
+          this.logger.info('[Consume %s ended] consumer processing:', this.name, this.processing);
           if (this.processing < maxProcessing && this.paused
             && !this.stopped) {
             this.paused = false;
-            this.mq.notifyRecv(receiver);
+            this.client.notifyRecv(receiver);
           }
         }
       })();
@@ -130,30 +143,27 @@ export class MnsConsumer implements ConsumerInterface {
     callback: (err: Error, msg: MessageInterface) => {},
     maxProcessing: Number = 3,
   ) {
-    return this.mq.notifyRecv(this.getReceiver(callback, maxProcessing, false));
+    return this.client.notifyRecv(this.getReceiver(callback, maxProcessing, false));
   }
 
   consuming(
     callback: (err: Error, msg: MessageInterface) => {},
     maxProcessing: Number = 3,
   ) {
-    return this.mq.notifyRecv(this.getReceiver(callback, maxProcessing, true));
+    return this.client.notifyRecv(this.getReceiver(callback, maxProcessing, true));
   }
 }
 
 export default class MnsMessageQueue implements MessageQueueAdapterInterface {
   producer: MnsProducer;
   consumer: MnsConsumer;
-  mq: any;
 
   /**
-   * @param injectClass
    * @param {MnsConfigInterface} config
    * @param {LoggerInterface} logger
    * @param {string} inputQueueName
    */
   constructor(
-    injectClass: any,
     config: MnsConfigInterface,
     logger: LoggerInterface,
     inputQueueName?: string,
@@ -162,7 +172,7 @@ export default class MnsMessageQueue implements MessageQueueAdapterInterface {
       Account,
       Region,
       MQ,
-    } = injectClass;
+    } = AliMNS;
     const {
       connection: {
         accountId,
@@ -177,15 +187,14 @@ export default class MnsMessageQueue implements MessageQueueAdapterInterface {
     const queueName = inputQueueName || defaultQueueName;
     const account = new Account(accountId, keyId, keySecret);
     account.setGA(false);
-    const mq = new MQ(
+    const client = new MQ(
       queueName,
       account,
       new Region(region, networkType),
     );
 
-    this.mq = mq;
-    this.producer = new MnsProducer({ mq, logger });
-    this.consumer = new MnsConsumer({ mq, logger });
+    this.producer = new MnsProducer({ client, logger });
+    this.consumer = new MnsConsumer({ client, logger });
   }
 
   getProducer(): MnsProducer {

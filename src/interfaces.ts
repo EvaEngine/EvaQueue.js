@@ -10,33 +10,24 @@ export interface MessageInterface {
   ack?: string;
 }
 
-export interface ProducerInterface {
-  mq: any;
+export interface ProducerInterface<C> {
+  client: C;
   logger: LoggerInterface;
+  name: string;
 
-  // constructor(input: {
-  //   mq: any,
-  //   logger: LoggerInterface,
-  // }): any;
+  getClient(): C;
 
   produce(message: MessageInterface): Promise<MessageInterface>;
 }
 
-export interface ConsumerInterface {
-  mq: any;
+export interface ConsumerInterface<C> {
+  client: C;
   logger: LoggerInterface;
-  processing: number;
+  name: string;
 
-  // constructor(input: {
-  //   mq: any,
-  //   logger: LoggerInterface,
-  // }): void;
-
-  consume(msg: MessageInterface, callback: (v: MessageInterface) => {}): Promise<void>;
+  getClient(): C;
 
   consuming(callback: () => {}, maxProcessing: number): void;
-
-  receive(): Promise<MessageInterface>;
 
   receiving(callback: () => {}, maxProcessing: number): void;
 }
@@ -57,14 +48,12 @@ export interface LoggerInterface {
 }
 
 export interface MessageQueueAdapterInterface {
-  producer: ProducerInterface;
-  consumer: ConsumerInterface;
+  producer: ProducerInterface<any>;
+  consumer: ConsumerInterface<any>;
 
-  // factory(injectClass: any, config: any, queueName?: string): any;
+  getProducer(queueName?: string): ProducerInterface<any>;
 
-  getProducer(queueName?: string): ProducerInterface;
-
-  getConsumer(queueName?: string): ConsumerInterface;
+  getConsumer(queueName?: string): ConsumerInterface<any>;
 }
 
 export enum Partterns {

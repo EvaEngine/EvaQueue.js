@@ -79,7 +79,7 @@ export enum CONFIG_MECHANISMS {
 export interface RDKafkaConfigInterface {
   'builtin.features'?: string;
   'client.id'?: string;
-  'metadata.broker.list': string[];
+  'metadata.broker.list'?: string[];
   'message.max.bytes'?: number;
   'message.copy.max.bytes'?: number;
   'receive.message.max.bytes'?: number;

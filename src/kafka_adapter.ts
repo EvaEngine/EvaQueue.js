@@ -1,5 +1,4 @@
 import Message from './message';
-import Kafka from 'node-rdkafka';
 import {
   ConfigInterface,
   ConsumerInterface,
@@ -12,10 +11,13 @@ import {
   RDKafkaConsumerConfigInterface,
   RDKafkaProducerConfigInterface,
   RDKafkaMessageInterface,
+  RDKafkaConfigInterface,
 } from './rdkafka/interfaces';
+import RDKafkaProducer from './rdkafka/producer';
+import RDKafkaConsumer from './rdkafka/consumer';
 
 export interface KafkaConfigInterface extends ConfigInterface {
-  connection: {};
+  connection: RDKafkaConfigInterface;
   producer: RDKafkaProducerConfigInterface;
   consumer: RDKafkaConsumerConfigInterface;
   defaultQueueName: string;
@@ -63,27 +65,37 @@ export class KafkaMessage extends Message {
   }
 }
 
-export class KafkaProducer implements ProducerInterface {
-  mq: any;
+export class KafkaProducer implements ProducerInterface<RDKafkaProducer> {
+  client: RDKafkaProducer;
   logger: LoggerInterface;
   connected: boolean = false;
   queue: string;
+  name: string;
 
   /**
-   * @param {{mq: RDKafkaProducer; logger: LoggerInterface}} input
+   * @param {any} input
    */
-  constructor(input: { mq: any, logger: LoggerInterface, queue?: string }) {
-    this.mq = input.mq;
+  constructor(input: {
+    client: RDKafkaProducer,
+    logger: LoggerInterface,
+    queue?: string,
+  }) {
+    this.client = input.client;
     this.logger = input.logger;
     this.queue = input.queue;
+    this.name = process.env.PRODUCER_NAME || `${require('os').hostname()}-${process.pid}`;
   }
 
   async connect() {
     if (false === this.connected) {
-      await this.mq.connect();
+      await this.client.connect();
       this.connected = true;
     }
     return this;
+  }
+
+  getClient() {
+    return this.client;
   }
 
   /**
@@ -93,56 +105,39 @@ export class KafkaProducer implements ProducerInterface {
    */
   async produce(message: KafkaMessage, queue?: string): Promise<Message> {
     await this.connect();
+    this.logger.debug('[Producer %s] connected', this.name);
     message.setTopic(queue || this.queue);
-    console.log(1111111111);
-    console.log(message);
-    console.log(message.toRDKafkaMessage());
-    await this.mq.produce(message.toRDKafkaMessage());
+    await this.client.produce(message.toRDKafkaMessage());
     return message;
   }
 }
 
-export class KafkaConsumer implements ConsumerInterface {
-  mq: any;
+export class KafkaConsumer implements ConsumerInterface<RDKafkaConsumer> {
+  client: RDKafkaConsumer;
   logger: LoggerInterface;
   processing: 0;
   connected: Boolean = false;
   queue: string;
+  name: string;
 
-  constructor(input: { mq: any, logger: LoggerInterface, queue?: string }) {
-    this.mq = input.mq;
+  constructor(input: { client: RDKafkaConsumer, logger: LoggerInterface, queue?: string }) {
+    this.client = input.client;
     this.logger = input.logger;
     this.queue = input.queue;
+    this.name = process.env.CONSUMER_NAME || `${require('os').hostname()}-${process.pid}`;
+  }
+
+  getClient() {
+    return this.client;
   }
 
   async connect() {
     if (false === this.connected) {
-      await this.mq.connect();
+      await this.client.connect();
       this.connected = true;
     }
     return this;
   }
-
-  async consume(message: MessageInterface, callback: (v: MessageInterface) => {}) {
-    // await this.mq.deleteP(message.ack);
-    // await callback(message);
-  }
-
-  async receive() {
-    const mnsMessage = await this.mq.recvP();
-    return KafkaMessage.factory(mnsMessage);
-  }
-
-  //
-  // async pause() {
-  //   await this.mq.notifyStopP();
-  //   this.paused = true;
-  // }
-  //
-  // async stop() {
-  //   await this.pause();
-  //   this.stopped = true;
-  // }
 
   receiving(
     callback: (err: Error, msg: MessageInterface) => {},
@@ -156,17 +151,21 @@ export class KafkaConsumer implements ConsumerInterface {
     queue?: string,
   ) {
     this.connect().then(() => {
-      return this.mq.subscribe([
+      const topics = [
         queue || this.queue,
-      ]);
-    }).then(() => {
-      this.mq.sub
-      this.mq.consume(
-        async (rdMessage: RDKafkaMessageInterface) => {
-          await callback(KafkaMessage.factory(rdMessage));
-        },
-        maxProcessing,
-      );
+      ];
+      this.logger.debug('[KafkaConsumer %s] connected, subscribing %s', this.name, topics);
+      return this.client.subscribe(topics);
+    }).then(async () => {
+      this.logger.debug('[KafkaConsumer %s] start consuming', this.name);
+      while (true) {
+        await this.client.consume(
+          async (rdMessage: RDKafkaMessageInterface) => {
+            await callback(KafkaMessage.factory(rdMessage));
+          },
+          maxProcessing,
+        );
+      }
     });
   }
 }
@@ -176,16 +175,11 @@ export default class KafkaMessageQueue implements MessageQueueAdapterInterface {
   consumer: KafkaConsumer;
 
   /**
-   * @param {Kafka} injectClass
    * @param {MnsConfigInterface} config
    * @param {LoggerInterface} logger
    * @param {string} inputQueueName
    */
   constructor(
-    injectClass: {
-      RDKafkaProducer: any,
-      RDKafkaConsumer: any,
-    },
     config: KafkaConfigInterface,
     logger: LoggerInterface,
     inputQueueName?: string,
@@ -193,12 +187,16 @@ export default class KafkaMessageQueue implements MessageQueueAdapterInterface {
     const queueName = inputQueueName || config.defaultQueueName;
     this.producer = new KafkaProducer({
       logger,
-      mq: new injectClass.RDKafkaProducer(config.producer),
+      client: new RDKafkaProducer(
+        Object.assign({}, config.connection, config.producer),
+      ),
       queue: queueName,
     });
     this.consumer = new KafkaConsumer({
       logger,
-      mq: new injectClass.RDKafkaConsumer(config.consumer),
+      client: new RDKafkaConsumer(
+        Object.assign({}, config.connection, config.consumer),
+      ),
       queue: queueName,
     });
   }
