@@ -1,4 +1,4 @@
-import { LoggerInterface } from 'interfaces';
+import { LoggerInterface } from './interfaces';
 
 const adapters = {};
 export default class MessageQueue {
