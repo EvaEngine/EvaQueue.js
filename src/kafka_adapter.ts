@@ -83,7 +83,7 @@ export class KafkaProducer implements ProducerInterface<RDKafkaProducer> {
     this.client = input.client;
     this.logger = input.logger;
     this.queue = input.queue;
-    this.name = process.env.PRODUCER_NAME || `${require('os').hostname()}-${process.pid}`;
+    this.name = process.env.PRODUCER_NAME || `PKafka-${require('os').hostname()}-${process.pid}`;
   }
 
   async connect() {
@@ -124,7 +124,7 @@ export class KafkaConsumer implements ConsumerInterface<RDKafkaConsumer> {
     this.client = input.client;
     this.logger = input.logger;
     this.queue = input.queue;
-    this.name = process.env.CONSUMER_NAME || `${require('os').hostname()}-${process.pid}`;
+    this.name = process.env.CONSUMER_NAME || `CKafka-${require('os').hostname()}-${process.pid}`;
   }
 
   getClient() {
@@ -146,7 +146,7 @@ export class KafkaConsumer implements ConsumerInterface<RDKafkaConsumer> {
   }
 
   consuming(
-    callback: (msg: MessageInterface) => {},
+    callback: (err: Error, msg: MessageInterface) => {},
     maxProcessing: number = 3,
     queue?: string,
   ) {
@@ -161,7 +161,7 @@ export class KafkaConsumer implements ConsumerInterface<RDKafkaConsumer> {
       while (true) {
         await this.client.consume(
           async (rdMessage: RDKafkaMessageInterface) => {
-            await callback(KafkaMessage.factory(rdMessage));
+            await callback(null, KafkaMessage.factory(rdMessage));
           },
           maxProcessing,
         );

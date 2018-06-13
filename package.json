@@ -9,7 +9,7 @@
     "ava": "LOG_LEVEL=error NODE_ENV=test ava --verbose --serial",
     "test": "nyc -a --reporter=lcov --reporter=text --reporter=html npm run ava",
     "lint": "tslint src/**/*.ts --exclude '**/*.d.ts' --project tsconfig.json",
-    "build": "rm -rf lib && tsc -m \"System\" --outFile \"lib/index\" --sourceMap \"false\" && rm lib/index && tsc",
+    "build": "rm -rf lib && tsc -m \"System\" --outFile \"lib/index\" --sourceMap \"false\" && rm lib/index && mv lib/index.d.ts ./ && tsc",
     "install:peers": "npm install --no-save $(jq -r '.peerDependencies | to_entries | map(\"\\(.key)@\\(.value | tostring)\") | join(\" \")' package.json)",
     "install:peers:mac": "CPPFLAGS=-I/usr/local/opt/openssl/include LDFLAGS=-L/usr/local/opt/openssl/lib npm install --no-save $(jq -r '.peerDependencies | to_entries | map(\"\\(.key)@\\(.value | tostring)\") | join(\" \")' package.json)"
   },

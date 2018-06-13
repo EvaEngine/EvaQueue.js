@@ -15,6 +15,7 @@ try {
 }
 
 const config = {
+  adapter: 'kafka',
   mns: {
     connection: {
       accountId: 'your_account_id',

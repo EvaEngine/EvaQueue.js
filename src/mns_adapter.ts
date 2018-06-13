@@ -53,7 +53,7 @@ export class MnsProducer implements ProducerInterface<AliMNS.MQ> {
   constructor(input: { client: AliMNS.MQ, logger: LoggerInterface }) {
     this.client = input.client;
     this.logger = input.logger;
-    this.name = process.env.PRODUCER_NAME || `${require('os').hostname()}-${process.pid}`;
+    this.name = process.env.PRODUCER_NAME || `PMns-${require('os').hostname()}-${process.pid}`;
   }
 
   getClient() {
@@ -82,7 +82,7 @@ export class MnsConsumer implements ConsumerInterface<AliMNS.MQ> {
   constructor(input: { client: AliMNS.MQ, logger: LoggerInterface }) {
     this.client = input.client;
     this.logger = input.logger;
-    this.name = process.env.CONSUMER_NAME || `${require('os').hostname()}-${process.pid}`;
+    this.name = process.env.CONSUMER_NAME || `CMns-${require('os').hostname()}-${process.pid}`;
   }
 
   getClient() {

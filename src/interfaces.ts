@@ -27,7 +27,7 @@ export interface ConsumerInterface<C> {
 
   getClient(): C;
 
-  consuming(callback: () => {}, maxProcessing: number): void;
+  consuming(callback: any, maxProcessing: number): void;
 
   receiving(callback: () => {}, maxProcessing: number): void;
 }

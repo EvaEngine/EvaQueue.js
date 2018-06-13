@@ -7,7 +7,7 @@ const kafkaMQ = new KafkaMessageQueue(
 
 (async () => {
   await kafkaMQ.getConsumer().consuming(
-    async (message: KafkaMessage) => {
+    async (err, message: KafkaMessage) => {
       console.log('Consuming %s', message);
     },
     3,

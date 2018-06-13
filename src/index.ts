@@ -1,9 +1,11 @@
-import { LoggerInterface } from './interfaces';
+import camelCase from 'lodash/camelCase';
+import { ConsumerInterface, LoggerInterface, MessageQueueAdapterInterface, ProducerInterface } from './interfaces';
 
 const adapters = {};
 export default class MessageQueue {
   config: any;
   logger: LoggerInterface;
+  adapter: MessageQueueAdapterInterface;
 
   static registerAdapter(adapterName: string, adapaterClass: any) {
     Object.assign(adapters, {
@@ -14,6 +16,10 @@ export default class MessageQueue {
   constructor(config: any, logger: LoggerInterface) {
     this.config = config;
     this.logger = logger;
+    if (this.config.adapter) {
+      const method = camelCase(`factory_${this.config.adapter}`);
+      (this as any)[method]();
+    }
   }
 
   getAdapter(name: string, adapterClass: any) {
@@ -26,26 +32,34 @@ export default class MessageQueue {
   /**
    * @returns {MnsMessageQueue}
    */
-  getMNS() {
+  factoryMns() {
     const name = 'mns';
     const mnsAdapter = require('./mns_adapter').default;
     MessageQueue.registerAdapter(name, mnsAdapter);
-    return new mnsAdapter({
-      config: this.config[name],
-      logger: this.logger,
-    });
+    return this.adapter = new mnsAdapter(
+      this.config[name],
+      this.logger,
+    );
   }
 
   /**
    * @returns {KafkaMessageQueue}
    */
-  getKafka() {
+  factoryKafka() {
     const name = 'kafka';
     const kafkaAdapter = require('./kafka_adapter').default;
     MessageQueue.registerAdapter(name, kafkaAdapter);
-    return new kafkaAdapter({
-      config: this.config[name],
-      logger: this.logger,
-    });
+    return this.adapter = new kafkaAdapter(
+      this.config[name],
+      this.logger,
+    );
+  }
+
+  getProducer(...args: any[]): ProducerInterface<any> {
+    return this.adapter.getProducer(...args);
+  }
+
+  getConsumer(...args: any[]): ConsumerInterface<any> {
+    return this.adapter.getConsumer(...args);
   }
 }
