@@ -1,8 +1,8 @@
-import { MessageInterface, RawMessageInterface } from './interfaces';
+import { MessageInterface } from './interfaces';
 import { Constructor } from 'ava';
 
 export default class Message implements MessageInterface {
-  messageId: string;
+  readonly messageId: string;
   messageHash: string;
   content: object;
   priority: number;
@@ -85,13 +85,12 @@ export default class Message implements MessageInterface {
   }
 
   downCasting(downCastingClass: Constructor): Message {
-    return new downCastingClass(this);
+    return new downCastingClass(null, this);
   }
 
-  constructor(msg: MessageInterface) {
+  constructor(content: any, msg: MessageInterface = {}) {
     const {
       queueName,
-      content,
       priority = 0,
       delay = 0,
       ack,
@@ -102,7 +101,7 @@ export default class Message implements MessageInterface {
       parentId,
     } = msg;
     this.queueName = queueName;
-    this.content = content;
+    this.content = content || msg.content;
     this.priority = priority;
     this.delay = delay;
     this.messageId = messageId;

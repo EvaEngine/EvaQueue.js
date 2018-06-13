@@ -2,7 +2,7 @@ export interface MessageInterface {
   queueName?: string;
   messageId?: string;
   messageHash?: string;
-  content: object;
+  content?: object;
   priority?: number;
   delay?: number;
   traceId?: string;

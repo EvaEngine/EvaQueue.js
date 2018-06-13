@@ -48,10 +48,9 @@ export class KafkaMessage extends Message {
       timestamp: enqueueAt,
     } = rdKafakaMessage;
 
-    const message = new KafkaMessage({
+    const message = new KafkaMessage(JSON.parse(contentBuffer.toString()), {
       messageId,
       enqueueAt,
-      content: JSON.parse(contentBuffer.toString()),
     });
     message.offset = offset;
     message.partition = partition;
@@ -84,6 +83,7 @@ export class KafkaProducer implements ProducerInterface<RDKafkaProducer> {
     if (false === this.connected) {
       await this.client.connect();
       this.connected = true;
+      this.logger.debug('[Producer %s] connected', this.name);
     }
     return this;
   }
@@ -99,7 +99,6 @@ export class KafkaProducer implements ProducerInterface<RDKafkaProducer> {
    */
   async produce(message: Message, queue?: string): Promise<Message> {
     await this.connect();
-    this.logger.debug('[Producer %s] connected', this.name);
     message.setQueueName(queue || this.queue);
     await this.client.produce(
       message instanceof KafkaMessage ?

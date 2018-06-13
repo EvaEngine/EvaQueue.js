@@ -8,6 +8,6 @@ const manager = new MQ(
 const producer = manager.getProducer();
 
 (async () => {
-  const msg = await producer.produce(new Message({ content: { foo: 'bar' } }));
+  const msg = await producer.produce(new Message({ foo: 'bar' }));
   console.log('[%s] producing %o', producer.name, msg);
 })();

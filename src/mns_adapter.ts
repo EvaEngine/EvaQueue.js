@@ -38,13 +38,12 @@ export class MnsMessage extends Message {
       },
     } = toCamelCase(mnsMessage);
 
-    return new MnsMessage({
+    return new MnsMessage(JSON.parse(messageBody), {
       messageId,
       priority,
       messageHash: messageBodyMD5,
       enqueueAt: Math.floor(enqueueTime / 1000),
       ack: receiptHandle,
-      content: messageBody,
     });
   }
 }
