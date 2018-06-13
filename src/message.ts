@@ -1,4 +1,5 @@
-import { MessageInterface } from './interfaces';
+import { MessageInterface, RawMessageInterface } from './interfaces';
+import { Constructor } from 'ava';
 
 export default class Message implements MessageInterface {
   messageId: string;
@@ -10,6 +11,16 @@ export default class Message implements MessageInterface {
   parentId: string;
   enqueueAt: number;
   ack: string;
+  queueName: string;
+
+  toRawMessage(): any {
+    throw new Error('Message not able to convert by no implements toRawMessage');
+  }
+
+  setQueueName(queueName: string) {
+    this.queueName = queueName;
+    return this;
+  }
 
   getMessageId() {
     return this.messageId;
@@ -70,35 +81,18 @@ export default class Message implements MessageInterface {
    * @returns {string}
    */
   toString() {
-    return JSON.stringify(this.content);
+    return JSON.stringify(this);
   }
 
-  assign(msg: MessageInterface) {
-    const {
-      priority,
-      delay = 0,
-      ack,
-      enqueueAt,
-      messageId,
-      messageHash,
-      traceId,
-      parentId,
-    } = msg;
-    this.priority = priority;
-    this.delay = delay;
-    this.messageId = messageId;
-    this.messageHash = messageHash;
-    this.traceId = traceId;
-    this.parentId = parentId;
-    this.ack = ack;
-    this.enqueueAt = enqueueAt;
-    return this;
+  downCasting(downCastingClass: Constructor): Message {
+    return new downCastingClass(this);
   }
 
   constructor(msg: MessageInterface) {
     const {
+      queueName,
       content,
-      priority,
+      priority = 0,
       delay = 0,
       ack,
       enqueueAt,
@@ -107,6 +101,7 @@ export default class Message implements MessageInterface {
       traceId,
       parentId,
     } = msg;
+    this.queueName = queueName;
     this.content = content;
     this.priority = priority;
     this.delay = delay;
@@ -115,7 +110,7 @@ export default class Message implements MessageInterface {
     this.traceId = traceId;
     this.parentId = parentId;
     this.ack = ack;
-    this.enqueueAt = enqueueAt;
+    this.enqueueAt = enqueueAt || Math.floor(Date.now() / 1000);
   }
 }
 

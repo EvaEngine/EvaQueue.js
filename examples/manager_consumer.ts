@@ -11,7 +11,7 @@ const consumer = manager.getConsumer();
 (async () => {
   await consumer.consuming(
     async (err: Error, message: MessageInterface) => {
-      console.log('[%s] consuming %o', consumer.name, message.content);
+      console.log('[%s] consuming %o', consumer.name, message);
     },
     3,
   );

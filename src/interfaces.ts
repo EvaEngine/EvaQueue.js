@@ -1,4 +1,5 @@
 export interface MessageInterface {
+  queueName?: string;
   messageId?: string;
   messageHash?: string;
   content: object;
@@ -8,6 +9,9 @@ export interface MessageInterface {
   parentId?: string;
   enqueueAt?: number;
   ack?: string;
+}
+
+export interface RawMessageInterface {
 }
 
 export interface ProducerInterface<C> {

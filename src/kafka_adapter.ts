@@ -26,18 +26,12 @@ export interface KafkaConfigInterface extends ConfigInterface {
 export class KafkaMessage extends Message {
   offset: number;
   partition: number;
-  topic: string;
 
-  setTopic(topic: string) {
-    this.topic = topic;
-    return this;
-  }
-
-  toRDKafkaMessage(): RDKafkaMessageInterface {
+  toRawMessage(): RDKafkaMessageInterface {
     return {
       value: Buffer.from(JSON.stringify(this.content)),
       // size: number
-      topic: this.topic,
+      topic: this.queueName,
       offset: this.offset,
       partition: this.partition,
       key: this.getMessageId(),
@@ -103,11 +97,15 @@ export class KafkaProducer implements ProducerInterface<RDKafkaProducer> {
    * @param {string} queue
    * @returns {Promise<Message>}
    */
-  async produce(message: KafkaMessage, queue?: string): Promise<Message> {
+  async produce(message: Message, queue?: string): Promise<Message> {
     await this.connect();
     this.logger.debug('[Producer %s] connected', this.name);
-    message.setTopic(queue || this.queue);
-    await this.client.produce(message.toRDKafkaMessage());
+    message.setQueueName(queue || this.queue);
+    await this.client.produce(
+      message instanceof KafkaMessage ?
+        message.toRawMessage() :
+        message.downCasting(KafkaMessage).toRawMessage(),
+    );
     return message;
   }
 }

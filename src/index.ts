@@ -1,5 +1,11 @@
 import camelCase from 'lodash/camelCase';
-import { ConsumerInterface, LoggerInterface, MessageQueueAdapterInterface, ProducerInterface } from './interfaces';
+import assert from 'assert';
+import {
+  ConsumerInterface,
+  LoggerInterface,
+  MessageQueueAdapterInterface,
+  ProducerInterface,
+} from './interfaces';
 
 const adapters = {};
 export default class MessageQueue {
@@ -22,7 +28,11 @@ export default class MessageQueue {
     }
   }
 
-  getAdapter(name: string, adapterClass: any) {
+  getAdapter() {
+    return this.adapter;
+  }
+
+  factoryAdapter(name: string, adapterClass: any) {
     return new adapterClass({
       config: this.config[name],
       logger: this.logger,
@@ -56,10 +66,12 @@ export default class MessageQueue {
   }
 
   getProducer(...args: any[]): ProducerInterface<any> {
+    assert(this.adapter, 'MQ Adapter not inited');
     return this.adapter.getProducer(...args);
   }
 
   getConsumer(...args: any[]): ConsumerInterface<any> {
+    assert(this.adapter, 'MQ Adapter not inited');
     return this.adapter.getConsumer(...args);
   }
 }

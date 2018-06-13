@@ -1,5 +1,5 @@
 import MQ from '../src/';
-import { KafkaMessage } from '../src/kafka_adapter';
+import Message from '../src/message';
 
 const manager = new MQ(
   require('./config'),
@@ -8,6 +8,6 @@ const manager = new MQ(
 const producer = manager.getProducer();
 
 (async () => {
-  const msg = await producer.produce(new KafkaMessage({ content: { foo: 'bar' } }));
-  console.log('[%s] producing', producer.name, msg);
+  const msg = await producer.produce(new Message({ content: { foo: 'bar' } }));
+  console.log('[%s] producing %o', producer.name, msg);
 })();

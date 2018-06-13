@@ -22,6 +22,10 @@ export interface MnsConfigInterface extends ConfigInterface {
 }
 
 export class MnsMessage extends Message {
+  toRawMessage(): string {
+    return JSON.stringify(this.content);
+  }
+
   static factory(mnsMessage: object): MnsMessage {
     const {
       message: {
@@ -38,7 +42,7 @@ export class MnsMessage extends Message {
       messageId,
       priority,
       messageHash: messageBodyMD5,
-      enqueueAt: enqueueTime / 1000,
+      enqueueAt: Math.floor(enqueueTime / 1000),
       ack: receiptHandle,
       content: messageBody,
     });
@@ -65,7 +69,11 @@ export class MnsProducer implements ProducerInterface<AliMNS.MQ> {
    * @returns {Promise<Message>}
    */
   async produce(message: Message): Promise<Message> {
-    await this.client.sendP(message.toString());
+    await this.client.sendP(
+      message instanceof MnsMessage ?
+        message.toRawMessage() :
+        message.downCasting(MnsMessage).toRawMessage(),
+    );
     return message;
   }
 }
