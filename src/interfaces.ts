@@ -11,7 +11,12 @@ export interface MessageInterface {
   ack?: string;
 }
 
-export interface RawMessageInterface {
+export interface CommandMessageInterface {
+  command: string;
+
+  getCommand(): string;
+
+  toCommand(): string;
 }
 
 export interface ProducerInterface<C> {

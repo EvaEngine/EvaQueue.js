@@ -1,5 +1,6 @@
-import Message from './message';
+import Message, { CommandMessage } from './message';
 import {
+  CommandMessageInterface,
   ConfigInterface,
   ConsumerInterface,
   LoggerInterface,
@@ -15,6 +16,7 @@ import {
 } from './rdkafka/interfaces';
 import RDKafkaProducer from './rdkafka/producer';
 import RDKafkaConsumer from './rdkafka/consumer';
+import { Constructor } from 'ava';
 
 export interface KafkaConfigInterface extends ConfigInterface {
   connection: RDKafkaConfigInterface;
@@ -23,14 +25,29 @@ export interface KafkaConfigInterface extends ConfigInterface {
   defaultQueueName: string;
 }
 
+export class KafkaCommandMessage extends CommandMessage {
+  offset: number;
+  partition: number;
+
+  toRawMessage(): RDKafkaMessageInterface {
+    return {
+      value: Buffer.from(JSON.stringify(this)),
+      topic: this.queueName,
+      offset: this.offset,
+      partition: this.partition,
+      key: this.getMessageId(),
+      timestamp: this.getEnqueueAt(),
+    };
+  }
+}
+
 export class KafkaMessage extends Message {
   offset: number;
   partition: number;
 
   toRawMessage(): RDKafkaMessageInterface {
     return {
-      value: Buffer.from(JSON.stringify(this.content)),
-      // size: number
+      value: Buffer.from(JSON.stringify(this)),
       topic: this.queueName,
       offset: this.offset,
       partition: this.partition,
@@ -39,19 +56,19 @@ export class KafkaMessage extends Message {
     };
   }
 
-  static factory(rdKafakaMessage: RDKafkaMessageInterface): KafkaMessage {
+  static factory(rdKafkaMessage: RDKafkaMessageInterface): KafkaMessage | KafkaCommandMessage {
     const {
       value: contentBuffer,
       offset,
       partition,
       key: messageId,
       timestamp: enqueueAt,
-    } = rdKafakaMessage;
+    } = rdKafkaMessage;
 
-    const message = new KafkaMessage(JSON.parse(contentBuffer.toString()), {
-      messageId,
-      enqueueAt,
-    });
+    const { content, ...msg } = JSON.parse(contentBuffer.toString());
+    const message = new (
+      msg.command ? KafkaCommandMessage : KafkaMessage as Constructor
+    )(content, msg);
     message.offset = offset;
     message.partition = partition;
     return message;
@@ -97,14 +114,24 @@ export class KafkaProducer implements ProducerInterface<RDKafkaProducer> {
    * @param {string} queue
    * @returns {Promise<Message>}
    */
-  async produce(message: Message, queue?: string): Promise<Message> {
+  async produce(message: Message | CommandMessage, queue?: string): Promise<Message> {
     await this.connect();
     message.setQueueName(queue || this.queue);
-    await this.client.produce(
-      message instanceof KafkaMessage ?
-        message.toRawMessage() :
-        message.downCasting(KafkaMessage).toRawMessage(),
-    );
+
+    if (message instanceof CommandMessage) {
+      await this.client.produce(
+        message instanceof KafkaCommandMessage ?
+          message.toRawMessage() :
+          message.downCasting(KafkaCommandMessage).toRawMessage(),
+      );
+    } else {
+      await this.client.produce(
+        message instanceof KafkaMessage ?
+          message.toRawMessage() :
+          message.downCasting(KafkaMessage).toRawMessage(),
+      );
+    }
+
     return message;
   }
 }

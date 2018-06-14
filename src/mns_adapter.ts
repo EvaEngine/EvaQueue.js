@@ -1,5 +1,5 @@
 import AliMNS from 'ali-mns';
-import Message from './message';
+import Message, { CommandMessage } from './message';
 import { toCamelCase } from './utils/case_converter';
 import {
   ConfigInterface,
@@ -9,6 +9,7 @@ import {
   MessageQueueAdapterInterface,
   ProducerInterface,
 } from './interfaces';
+import { Constructor } from 'ava';
 
 export interface MnsConfigInterface extends ConfigInterface {
   connection: {
@@ -21,12 +22,29 @@ export interface MnsConfigInterface extends ConfigInterface {
   defaultQueueName: string;
 }
 
+export interface MnsRawMessageInterface {
+  message: {
+    messageId: string,
+    messageBodyMD5: string,
+    messageBody: string,
+    enqueueTime: string,
+    receiptHandle: string,
+    priority: number,
+  };
+}
+
+export class MnsCommandMessage extends CommandMessage {
+  toRawMessage(): string {
+    return JSON.stringify(this);
+  }
+}
+
 export class MnsMessage extends Message {
   toRawMessage(): string {
-    return JSON.stringify(this.content);
+    return JSON.stringify(this);
   }
 
-  static factory(mnsMessage: object): MnsMessage {
+  static factory(mnsMessage: MnsRawMessageInterface): MnsMessage | MnsCommandMessage {
     const {
       message: {
         messageId,
@@ -38,13 +56,17 @@ export class MnsMessage extends Message {
       },
     } = toCamelCase(mnsMessage);
 
-    return new MnsMessage(JSON.parse(messageBody), {
+    const { content, ...msg } = JSON.parse(messageBody);
+
+    return new (
+      msg.command ? MnsCommandMessage : MnsMessage as Constructor
+    )(content, Object.assign(msg, {
       messageId,
       priority,
       messageHash: messageBodyMD5,
       enqueueAt: Math.floor(enqueueTime / 1000),
       ack: receiptHandle,
-    });
+    }));
   }
 }
 
@@ -67,12 +89,20 @@ export class MnsProducer implements ProducerInterface<AliMNS.MQ> {
    * @param {Message} message
    * @returns {Promise<Message>}
    */
-  async produce(message: Message): Promise<Message> {
-    await this.client.sendP(
-      message instanceof MnsMessage ?
-        message.toRawMessage() :
-        message.downCasting(MnsMessage).toRawMessage(),
-    );
+  async produce(message: Message | CommandMessage): Promise<Message> {
+    if (message instanceof CommandMessage) {
+      await this.client.sendP(
+        message instanceof MnsCommandMessage ?
+          message.toRawMessage() :
+          message.downCasting(MnsCommandMessage).toRawMessage(),
+      );
+    } else {
+      await this.client.sendP(
+        message instanceof MnsMessage ?
+          message.toRawMessage() :
+          message.downCasting(MnsMessage).toRawMessage(),
+      );
+    }
     return message;
   }
 }
@@ -117,23 +147,26 @@ export class MnsConsumer implements ConsumerInterface<AliMNS.MQ> {
   }
 
   private getReceiver(
-    callback: (err: Error, msg: MessageInterface) => {},
+    callback: (err: Error, msg: Message | CommandMessage) => {},
     maxProcessing: Number = 3,
     autoConsume: Boolean = false,
   ) {
     this.processing = 0;
-    const receiver = (err: Error, mnsMessage: object) => {
+    const receiver = (err: Error, mnsRawMessage: MnsRawMessageInterface) => {
       (async () => {
         this.processing += 1;
-        this.logger.info('[Consume %s started] consumer processing:', this.name, this.processing);
+        this.logger.info('[%s started] consumer processing:', this.name, this.processing);
         if (this.processing >= maxProcessing) {
           await this.pause();
         }
         try {
-          await callback(err, mnsMessage ? MnsMessage.factory(mnsMessage) : null);
+          await callback(
+            err,
+            mnsRawMessage ? MnsMessage.factory(mnsRawMessage) : null,
+          );
         } finally {
           this.processing -= 1;
-          this.logger.info('[Consume %s ended] consumer processing:', this.name, this.processing);
+          this.logger.info('[%s ended] consumer processing:', this.name, this.processing);
           if (this.processing < maxProcessing && this.paused
             && !this.stopped) {
             this.paused = false;
@@ -154,7 +187,7 @@ export class MnsConsumer implements ConsumerInterface<AliMNS.MQ> {
   }
 
   consuming(
-    callback: (err: Error, msg: MessageInterface) => {},
+    callback: (err: Error, msg: Message | CommandMessage) => {},
     maxProcessing: Number = 3,
   ) {
     return this.client.notifyRecv(this.getReceiver(callback, maxProcessing, true));

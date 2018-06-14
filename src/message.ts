@@ -1,4 +1,4 @@
-import { MessageInterface } from './interfaces';
+import { CommandMessageInterface, MessageInterface } from './interfaces';
 import { Constructor } from 'ava';
 
 export default class Message implements MessageInterface {
@@ -70,8 +70,8 @@ export default class Message implements MessageInterface {
    */
   toDebugString() {
     return [
-      this.getMessageId(),
       this.getTraceId(),
+      this.getMessageId(),
       this.getParentId(),
       JSON.stringify(this.content),
     ].join(' | ');
@@ -104,16 +104,44 @@ export default class Message implements MessageInterface {
     this.content = content || msg.content;
     this.priority = priority;
     this.delay = delay;
-    this.messageId = messageId;
+    this.messageId = messageId || Math.random().toString(36).slice(2);
     this.messageHash = messageHash;
-    this.traceId = traceId;
+    this.traceId = traceId || Math.random().toString(36).slice(2);
     this.parentId = parentId;
     this.ack = ack;
     this.enqueueAt = enqueueAt || Math.floor(Date.now() / 1000);
   }
 }
 
-export class CommandMessage extends Message {
-  getCommand() {
+export class CommandMessage extends Message implements CommandMessageInterface {
+  command: string;
+
+  constructor(
+    command: {
+      name: string,
+      spec?: any,
+    },
+    msg: MessageInterface = {},
+  ) {
+    super(command, msg);
+    this.command = this.toCommand();
+  }
+
+  getCommand(): string {
+    return this.command;
+  }
+
+  toCommand(): string {
+    const {
+      name,
+      spec,
+    } = this.content as any;
+    const specString = Object
+      .entries(spec)
+      .map(([key, value]) => {
+        return `--${key} ${value}`;
+      })
+      .join(' ');
+    return `${name} ${specString}`;
   }
 }
