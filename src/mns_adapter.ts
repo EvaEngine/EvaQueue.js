@@ -2,12 +2,16 @@ import AliMNS from 'ali-mns';
 import Message, { CommandMessage } from './message';
 import { toCamelCase } from './utils/case_converter';
 import {
-  ConfigInterface, Constructor,
+  Constructor,
+  ConfigInterface,
   ConsumerInterface,
   LoggerInterface,
   MessageInterface,
-  MessageQueueAdapterInterface, MessageTopicAdapterInterface,
-  ProducerInterface, PublisherInterface, SubscriberInterface,
+  MessageQueueAdapterInterface,
+  MessageTopicAdapterInterface,
+  ProducerInterface,
+  PublisherInterface,
+  SubscriberInterface,
 } from './interfaces';
 import Timer = NodeJS.Timer;
 import Signals = NodeJS.Signals;

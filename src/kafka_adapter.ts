@@ -6,7 +6,10 @@ import {
   LoggerInterface,
   MessageInterface,
   MessageQueueAdapterInterface,
-  ProducerInterface, PublisherInterface, SubscriberInterface, MessageTopicAdapterInterface,
+  ProducerInterface,
+  PublisherInterface,
+  SubscriberInterface,
+  MessageTopicAdapterInterface,
 } from './interfaces';
 import {
   RDKafkaConsumerConfigInterface,
@@ -17,7 +20,6 @@ import {
 import RDKafkaProducer from './rdkafka/producer';
 import RDKafkaConsumer from './rdkafka/consumer';
 import Signals = NodeJS.Signals;
-import { MnsConfigInterface, MnsPublisher, MnsSubscriber } from './mns_adapter';
 import Timer = NodeJS.Timer;
 
 export interface KafkaConfigInterface extends ConfigInterface {
