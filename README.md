@@ -1,6 +1,6 @@
 # EvaQueue.js
 
-EvaQueue.js provide a unified API across different high performance queue backends, including Kafka, AliMNS or other message queue which support customize.
+EvaQueue.js provide a unified API across different high performance queue backends, including [Kafka](https://kafka.apache.org/), [AliMNS](https://www.alibabacloud.com/product/message-service) or other message queues which could be customized.
 
 Features:
 
