@@ -1,6 +1,14 @@
 # EvaQueue.js
 
-EvaQueue.js provide a unified API across different high performance queue backends, including Kafka, AliMNS
+EvaQueue.js provide a unified API across different high performance queue backends, including Kafka, AliMNS or other message queue which support customize.
+
+Features:
+
+- Same API for Kafka / AliMNS / others
+- Only install necessary message queue library, EvaQueue work as a peer dependency
+- High level API, easier for understanding and using
+- Built-In graceful exit
+- Written by TypeScript, IDE friendly
 
 ## Quick start
 
@@ -16,31 +24,75 @@ NOTE: if install `node-rdkafka` met error `ld: symbol(s) not found for architect
 CPPFLAGS=-I/usr/local/opt/openssl/include LDFLAGS=-L/usr/local/opt/openssl/lib npm install
 ```
 
-### Use AliMNS
+## Use as Producer & Consumer
 
-```typescript
-import MnsMessageQueue, { MnsMessage } from 'evaqueue/lib/mns_adapter';
+Produce a message to queue:
 
-const mnsMQ = new MnsMessageQueue(
-  {
-    connection: {
-      accountId: 'your account Id',
-      region: 'hangzhou',
-      keyId: 'your key id',
-      keySecret: 'your secret',
-      networkType: '',
-    },
-    defaultQueueName: 'your queue name',
-  },
+``` js
+import MQ from 'evaqueue';
+import Message from 'evaqueue/message';
+
+const manager = new MQ(
+  require('./config'),
   console,
 );
+const producer = manager.getProducer();
 
 (async () => {
-  const msg = await mnsMQ.getProducer().produce(new MnsMessage({ content: { foo: 'bar' } }));
-  console.log(msg.toDebugString());
+  try {
+    const msg = await producer.produce(new Message({ foo: 'bar' }));
+    console.log('[%s] producing %o', producer.name, msg);
+  } catch (e) {
+    console.error(e);
+  }
 })();
 ```
 
+Consume messages from queue:
+
+``` js
+import MQ from 'evaqueue';
+
+const manager = new MQ(
+  require('./config'),
+  console,
+);
+const consumer = manager.getConsumer();
+
+(async () => {
+  await consumer.consuming(
+    async (err, message) => {
+      console.log('[%s] consuming %o', consumer.name, message);
+    },
+    3,
+  );
+})();
+
+consumer.enableGracefulExit();
+```
+
+### Switch Ali-MNS / Kafka
+
+Just change config file
+
+``` js
+{
+  defaultInstance: 'kafka_default'
+}
+```
+
+to
+
+``` js
+{
+  defaultInstance: 'mns_default'
+}
+```
+
+
+### Try more examples
+
+[Examples](./examples)
 
 # Development
 
