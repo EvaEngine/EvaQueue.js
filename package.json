@@ -4,8 +4,7 @@
   "description": "EvaQueue.js provide a unified API across different high performance queue backends, including Kafka, AliMNS",
   "main": "index.js",
   "scripts": {
-    "prestart": "npm run build",
-    "prepublish": "npm run build",
+    "prepare": "npm run build",
     "ava": "LOG_LEVEL=error NODE_ENV=test ava --verbose --serial",
     "test": "nyc -a --reporter=lcov --reporter=text --reporter=html npm run ava",
     "lint": "tslint src/**/*.ts --exclude '**/*.d.ts' --project tsconfig.json",
