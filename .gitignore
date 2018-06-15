@@ -45,3 +45,5 @@ src/config/config.local*
 src/config/sequelize.json
 lib/*
 .nyc_output
+examples/config.local.ts
+index.d.ts

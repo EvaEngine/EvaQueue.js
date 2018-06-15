@@ -1,5 +1,7 @@
 *
 !lib/**/*
 !index.js
+!message.js
+!index.d.ts
 !package.json
 !README.md

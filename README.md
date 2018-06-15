@@ -1,63 +1,108 @@
 # EvaQueue.js
 
-Message queue and topic for [EvaEngine.js](https://github.com/EvaEngine/EvaEngine.js).
+EvaQueue.js provide a unified API across different high performance queue backends, including Kafka, AliMNS or other message queue which support customize.
 
-## Prerequisites
+Features:
 
-- [ali-mns](https://www.npmjs.com/package/ali-mns) account and at least one message queue
-- [evaengine](https://www.npmjs.com/package/evaengine) and related config files
+- Same API for Kafka / AliMNS / others
+- Only install necessary message queue library, EvaQueue work as a peer dependency
+- High level API, easier for understanding and using
+- Built-In graceful exit
+- Written by TypeScript, IDE friendly
 
-## Config
+## Quick start
 
-```javascript
-{
-  mq: {
-    mns: [
-      {
-        queueName: 'queue_1',
-        topicName: 'topic_1',
-        accountId: '',
-        region: '',
-        keyId: '',
-        keySecret: '',
-        default: true
-      }
-    ],
-    kue: {
-      redis: {
-        port: 6379,
-        host: 'localhost',
-        auth: null,
-        options: {}
-      }
-    }
+```
+npm install evaqueue ali-mns node-rdkafka
+```
+
+EvaQueue.js will installed as peer dependency, you are free to install queue libs which only required.
+
+NOTE: if install `node-rdkafka` met error `ld: symbol(s) not found for architecture x86_64`, try below command to fix
+
+```
+CPPFLAGS=-I/usr/local/opt/openssl/include LDFLAGS=-L/usr/local/opt/openssl/lib npm install
+```
+
+## Use as Producer & Consumer
+
+Produce a message to queue:
+
+``` js
+import MQ from 'evaqueue';
+import Message from 'evaqueue/message';
+
+const manager = new MQ(
+  require('./config'),
+  console,
+);
+const producer = manager.getProducer();
+
+(async () => {
+  try {
+    const msg = await producer.produce(new Message({ foo: 'bar' }));
+    console.log('[%s] producing %o', producer.name, msg);
+  } catch (e) {
+    console.error(e);
   }
+})();
+```
+
+Consume messages from queue:
+
+``` js
+import MQ from 'evaqueue';
+
+const manager = new MQ(
+  require('./config'),
+  console,
+);
+const consumer = manager.getConsumer();
+
+(async () => {
+  await consumer.consuming(
+    async (err, message) => {
+      console.log('[%s] consuming %o', consumer.name, message);
+    },
+    3,
+  );
+})();
+
+consumer.enableGracefulExit();
+```
+
+### Switch Ali-MNS / Kafka
+
+Just change config file
+
+``` js
+{
+  defaultInstance: 'kafka_default'
 }
 ```
 
-## Usage
+to
 
-- MQ: queue model
-- MT: topic model
-- Message: message for MQ and MT
-
-```javascript
-import { DI } from 'evaengine';
-import { Message, MT, MQ } from 'evaqueue';
-
-// use evaengine's config and logger
-const config = DI.get('config');
-const logger = DI.get('logger');
-
-// publish message on topic
-const mt = new MT(config, logger);
-mt.getPublisher().publish(new Message({
-  command: `faker:sleeping --seconds 3`
-}));
-
-// produce message on queue
-const mq = new MQ(config, logger);
-mq.getProducer().produce(new Message({
-  command: `event:trigger --name 'foo' --data 'bar'`
-}));
+``` js
+{
+  defaultInstance: 'mns_default'
+}
 ```
+
+
+### Try more examples
+
+[Examples](./examples)
+
+# Development
+
+``` bash
+git clone git@github.com:bmqb/EvaQueue.js.git
+cd EvaQueue.js
+brew install jq
+npm install
+npm run install:peers
+```
+
+
+node-rdkafka promisfy is from https://github.com/joway/node-kfk

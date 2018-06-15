@@ -3,12 +3,12 @@ import camelCase from 'lodash/camelCase';
 
 /**
  * deeply converts keys of an object from one case to another
- * @param {object} object to convert
- * @param {function} function to convert key.
- * @return converted object
+ * @param {object} oldObject
+ * @param {(v: string) => string} converterFunction
+ * @returns {object}
  */
-const convertCase = (oldObject, converterFunction) => {
-  let newObject;
+const convertCase = (oldObject: any, converterFunction: (v: string) => string) => {
+  let newObject: any;
 
   if (!oldObject || typeof oldObject !== 'object' || !Object.keys(oldObject).length) {
     return oldObject;
@@ -27,7 +27,5 @@ const convertCase = (oldObject, converterFunction) => {
   return newObject;
 };
 
-export const toCamelCase = obj => convertCase(obj, camelCase);
-export const toSnakeCase = obj => convertCase(obj, snakeCase);
-
-export default { toCamelCase, toSnakeCase };
+export const toCamelCase = (obj: object) => convertCase(obj, camelCase);
+export const toSnakeCase = (obj: object) => convertCase(obj, snakeCase);
