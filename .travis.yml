@@ -2,10 +2,9 @@ language: node_js
 node_js:
 - 8
 - 10
-install:
+script:
 - npm run install:peers
 - npm install
-script:
 - npm run lint
 - npm test
 after_success:
