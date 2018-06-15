@@ -6,7 +6,7 @@ import {
   LoggerInterface,
   MessageInterface,
   MessageQueueAdapterInterface,
-  ProducerInterface,
+  ProducerInterface, PublisherInterface, SubscriberInterface, MessageTopicAdapterInterface,
 } from './interfaces';
 import {
   RDKafkaConsumerConfigInterface,
@@ -17,12 +17,14 @@ import {
 import RDKafkaProducer from './rdkafka/producer';
 import RDKafkaConsumer from './rdkafka/consumer';
 import Signals = NodeJS.Signals;
+import { MnsConfigInterface, MnsPublisher, MnsSubscriber } from './mns_adapter';
 
 export interface KafkaConfigInterface extends ConfigInterface {
   connection: RDKafkaConfigInterface;
   producer: RDKafkaProducerConfigInterface;
   consumer: RDKafkaConsumerConfigInterface;
   defaultQueueName: string;
+  defaultTopicName: string;
 }
 
 export class KafkaCommandMessage extends CommandMessage {
@@ -207,6 +209,62 @@ export class KafkaConsumer implements ConsumerInterface<RDKafkaConsumer> {
       });
     }
     this.logger.debug('[%s] graceful exit enabled', this.name);
+  }
+}
+
+export class KafkaPublisher extends KafkaProducer implements PublisherInterface<RDKafkaProducer> {
+  async publish(message: Message | CommandMessage, topic?: string): Promise<Message> {
+    return this.produce(message, topic);
+  }
+}
+
+export class KafkaSubscriber extends KafkaConsumer implements SubscriberInterface<RDKafkaConsumer> {
+  subscribing(
+    callback: (err: Error, msg: MessageInterface) => {},
+    maxProcessing: number = 3,
+    queue?: string,
+  ) {
+    return this.consuming(callback, maxProcessing, queue);
+  }
+}
+
+export class KafkaMessageTopic implements MessageTopicAdapterInterface {
+  publisher: KafkaPublisher;
+  subscriber: KafkaSubscriber;
+
+  /**
+   * @param {KafkaConfigInterface} config
+   * @param {LoggerInterface} logger
+   * @param {string} inputTopicName
+   */
+  constructor(
+    config: KafkaConfigInterface,
+    logger: LoggerInterface,
+    inputTopicName?: string,
+  ) {
+    const topicName = inputTopicName || config.defaultTopicName;
+    this.publisher = new KafkaPublisher({
+      logger,
+      client: new RDKafkaProducer(
+        Object.assign({}, config.connection, config.producer),
+      ),
+      queue: topicName,
+    });
+    this.subscriber = new KafkaSubscriber({
+      logger,
+      client: new RDKafkaConsumer(
+        Object.assign({}, config.connection, config.consumer),
+      ),
+      queue: topicName,
+    });
+  }
+
+  getPublisher(): KafkaPublisher {
+    return this.publisher;
+  }
+
+  getSubscriber(): KafkaSubscriber {
+    return this.subscriber;
   }
 }
 

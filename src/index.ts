@@ -4,20 +4,19 @@ import {
   Constructor,
   ConsumerInterface,
   LoggerInterface,
-  MessageQueueAdapterInterface,
-  ProducerInterface,
+  MessageQueueAdapterInterface, MessageTopicAdapterInterface,
+  ProducerInterface, PublisherInterface, SubscriberInterface,
 } from './interfaces';
 
-const adapters: Map<string, Constructor> = new Map<string, Constructor>();
-
-export default class MessageQueue {
+abstract class BaseMessageQueue {
   config: any;
   logger: LoggerInterface;
-  instances: Map<string, MessageQueueAdapterInterface>;
+  instances: Map<string, MessageQueueAdapterInterface | MessageTopicAdapterInterface>;
+  static adapters: Map<string, Constructor> = new Map<string, Constructor>();
 
   static registerAdapter(adapterName: string, adapterClass: Constructor) {
-    if (adapters.has(adapterName) === false) {
-      adapters.set(adapterName, adapterClass);
+    if (this.adapters.has(adapterName) === false) {
+      this.adapters.set(adapterName, adapterClass);
     }
   }
 
@@ -47,7 +46,9 @@ export default class MessageQueue {
     }
     return instance;
   }
+}
 
+export default class MessageQueue extends BaseMessageQueue {
   /**
    * @returns {MnsMessageQueue}
    */
@@ -73,7 +74,7 @@ export default class MessageQueue {
     queueName?: string,
   ): ProducerInterface<any> {
     assert(this.instances.has(instanceKey), 'MQ Adapter not inited');
-    return this.instances.get(instanceKey).getProducer(queueName);
+    return (this.instances.get(instanceKey) as MessageQueueAdapterInterface).getProducer(queueName);
   }
 
   getConsumer(
@@ -81,6 +82,46 @@ export default class MessageQueue {
     queueName?: string,
   ): ConsumerInterface<any> {
     assert(this.instances.has(instanceKey), 'MQ Adapter not inited');
-    return this.instances.get(instanceKey).getConsumer(queueName);
+    return (this.instances.get(instanceKey) as MessageQueueAdapterInterface).getConsumer(queueName);
+  }
+}
+
+export class MessageTopic extends BaseMessageQueue {
+  /**
+   * @returns {MnsMessageQueue}
+   */
+  factoryMns(configKey = 'default') {
+    const name = 'mns';
+    const mnsAdapter = require('./mns_adapter').MnsMessageTopic;
+    MessageQueue.registerAdapter(name, mnsAdapter);
+    return this.factoryAdapter(name, configKey, mnsAdapter);
+  }
+
+  /**
+   * @returns {KafkaMessageQueue}
+   */
+  factoryKafka(configKey = 'default') {
+    const name = 'kafka';
+    const kafkaAdapter = require('./kafka_adapter');
+    MessageQueue.registerAdapter(name, kafkaAdapter);
+    return this.factoryAdapter(name, configKey, kafkaAdapter);
+  }
+
+  getPublisher(
+    instanceKey: string = this.config.defaultInstance,
+    queueName?: string,
+  ): PublisherInterface<any> {
+    assert(this.instances.has(instanceKey), 'MQ Adapter not inited');
+    return (this.instances.get(instanceKey) as MessageTopicAdapterInterface)
+      .getPublisher(queueName);
+  }
+
+  getSubcriber(
+    instanceKey: string = this.config.defaultInstance,
+    queueName?: string,
+  ): SubscriberInterface<any> {
+    assert(this.instances.has(instanceKey), 'MQ Adapter not inited');
+    return (this.instances.get(instanceKey) as MessageTopicAdapterInterface)
+      .getSubscriber(queueName);
   }
 }
