@@ -2,14 +2,16 @@ language: node_js
 node_js:
 - 8
 - 10.4.1
-script:
+install:
+- cp package.json package.json.bak
 - npm run install:peers
 - npm install
+script:
 - npm run lint
 - npm test
 after_success:
   - bash <(curl -s https://codecov.io/bash)
-  - npm run build
+  - npm run build && mv package.json.bak package.json
   - npm run travis-deploy-once "npm run semantic-release"
 branches:
   only:
