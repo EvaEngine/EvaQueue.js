@@ -6,13 +6,12 @@ import {
 import {
   ConnectingError,
   DisconnectError,
-  ConnectionNotReadyError,
   ConnectionDeadError,
   ProducerFlushError,
   ProducerRuntimeError,
 } from './errors';
 
-const ERROR_CODES = Kafka.CODES.ERRORS;
+// const ERROR_CODES = Kafka.CODES.ERRORS;
 const FLUSH_TIMEOUT = 1000; // ms
 export abstract class KafkaBasicProducer {
   public client: Kafka.Producer;
@@ -23,8 +22,6 @@ export abstract class KafkaBasicProducer {
     this.dead = false;
     this.flushing = false;
     this.client = new Kafka.Producer(conf, topicConf);
-
-    // this.setGracefulDeath();
   }
 
   abstract async gracefulDead(): Promise<boolean>;

@@ -15,36 +15,40 @@ try {
 }
 
 const config = {
-  adapter: 'kafka',
   mns: {
-    connection: {
-      accountId: 'your_account_id',
-      region: 'hangzhou',
-      keyId: 'your_key_id',
-      keySecret: 'your_key_secret',
-      networkType: '',
+    default: {
+      connection: {
+        accountId: 'your_account_id',
+        region: 'hangzhou',
+        keyId: 'your_key_id',
+        keySecret: 'your_key_secret',
+        networkType: '',
+      },
+      defaultTopicName: 'your_topic_name',
+      defaultQueueName: 'your_queue_name',
     },
-    defaultQueueName: 'your_queue_name',
   },
   kafka: {
-    connection: {
-      debug: CONFIG_DEBUG.all,
-      'api.version.request': CONFIG_TRUE_FALSE.true,
-      'metadata.broker.list': ['kafka-cn-internet.aliyun.com:8080'],
-      'security.protocol': CONFIG_SECURITY_PROTOCOL.sasl_ssl,
-      'ssl.ca.location': './ca-cert',
-      'sasl.mechanisms': CONFIG_MECHANISMS.PLAIN,
-      'sasl.username': 'your_username',
-      'sasl.password': 'your_password',
+    default: {
+      connection: {
+        debug: CONFIG_DEBUG.all,
+        'api.version.request': CONFIG_TRUE_FALSE.true,
+        'metadata.broker.list': ['kafka-cn-internet.aliyun.com:8080'],
+        'security.protocol': CONFIG_SECURITY_PROTOCOL.sasl_ssl,
+        'ssl.ca.location': './ca-cert',
+        'sasl.mechanisms': CONFIG_MECHANISMS.PLAIN,
+        'sasl.username': 'your_username',
+        'sasl.password': 'your_password',
+      },
+      producer: {
+        dr_cb: true,
+        dr_msg_cb: true,
+      },
+      consumer: {
+        'group.id': 'your_group_id',
+      },
+      defaultQueueName: 'your_topic',
     },
-    producer: {
-      dr_cb: true,
-      dr_msg_cb: true,
-    },
-    consumer: {
-      'group.id': 'your_group_id',
-    },
-    defaultQueueName: 'your_topic',
   },
 };
 

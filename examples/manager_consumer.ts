@@ -16,3 +16,5 @@ const consumer = manager.getConsumer();
     3,
   );
 })();
+
+consumer.enableGracefulExit();

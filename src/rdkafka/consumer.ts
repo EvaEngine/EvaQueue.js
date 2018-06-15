@@ -93,13 +93,9 @@ export abstract class KafkaBasicConsumer {
 
   private setGracefulDeath() {
     const gracefulDeath = async () => {
-      console.log('Consumer graceul death begin');
-
       this.dead = true;
       await this.gracefulDead();
       await this.disconnect();
-
-      console.log('Consumer graceul death success');
       process.exit(0);
     };
     process.on('SIGINT', gracefulDeath);

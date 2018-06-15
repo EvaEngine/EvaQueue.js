@@ -1,3 +1,5 @@
+export type Constructor = (new (...args: Array<any>) => any);
+
 export interface MessageInterface {
   queueName?: string;
   messageId?: string;
@@ -9,6 +11,7 @@ export interface MessageInterface {
   parentId?: string;
   enqueueAt?: number;
   ack?: string;
+  // TODO: server Message ID
 }
 
 export interface CommandMessageInterface {
@@ -39,6 +42,33 @@ export interface ConsumerInterface<C> {
   consuming(callback: any, maxProcessing: number): void;
 
   receiving(callback: () => {}, maxProcessing: number): void;
+
+  gracefulExit(): void;
+
+  enableGracefulExit(): void;
+}
+
+export interface PublisherInterface<C> {
+  client: C;
+  logger: LoggerInterface;
+  name: string;
+
+  getClient(): C;
+
+  publish(message: MessageInterface): Promise<MessageInterface>;
+}
+
+export interface SubscriberInterface<C> {
+  client: C;
+  logger: LoggerInterface;
+  name: string;
+
+  getClient(): C;
+
+  subscribing(callback: any, maxProcessing: number): void;
+
+  gracefulExit(): void;
+
 }
 
 export interface ConfigInterface {
@@ -65,7 +95,11 @@ export interface MessageQueueAdapterInterface {
   getConsumer(queueName?: string): ConsumerInterface<any>;
 }
 
-export enum Partterns {
-  'PRODUCER_CONSUMER',
-  'PUBLISHER_SUBSCRIBER',
+export interface MessageTopicAdapterInterface {
+  publisher: PublisherInterface<any>;
+  subscriber: SubscriberInterface<any>;
+
+  getPublisher(queueName?: string): PublisherInterface<any>;
+
+  getSubscriber(queueName?: string): SubscriberInterface<any>;
 }

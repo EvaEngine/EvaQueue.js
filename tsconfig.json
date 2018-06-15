@@ -2,7 +2,7 @@
   "compilerOptions": {
     "module": "commonjs",
     "esModuleInterop": true,
-    "target": "esnext",
+    "target": "ES2017",
     "noImplicitAny": true,
     "removeComments": false,
     "moduleResolution": "node",

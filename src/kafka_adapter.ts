@@ -1,6 +1,6 @@
 import Message, { CommandMessage } from './message';
 import {
-  CommandMessageInterface,
+  Constructor,
   ConfigInterface,
   ConsumerInterface,
   LoggerInterface,
@@ -16,7 +16,7 @@ import {
 } from './rdkafka/interfaces';
 import RDKafkaProducer from './rdkafka/producer';
 import RDKafkaConsumer from './rdkafka/consumer';
-import { Constructor } from 'ava';
+import Signals = NodeJS.Signals;
 
 export interface KafkaConfigInterface extends ConfigInterface {
   connection: RDKafkaConfigInterface;
@@ -61,8 +61,8 @@ export class KafkaMessage extends Message {
       value: contentBuffer,
       offset,
       partition,
-      key: messageId,
-      timestamp: enqueueAt,
+      // key: messageId,
+      // timestamp: enqueueAt,
     } = rdKafkaMessage;
 
     const { content, ...msg } = JSON.parse(contentBuffer.toString());
@@ -139,7 +139,6 @@ export class KafkaProducer implements ProducerInterface<RDKafkaProducer> {
 export class KafkaConsumer implements ConsumerInterface<RDKafkaConsumer> {
   client: RDKafkaConsumer;
   logger: LoggerInterface;
-  processing: 0;
   connected: Boolean = false;
   queue: string;
   name: string;
@@ -178,10 +177,10 @@ export class KafkaConsumer implements ConsumerInterface<RDKafkaConsumer> {
       const topics = [
         queue || this.queue,
       ];
-      this.logger.debug('[KafkaConsumer %s] connected, subscribing %s', this.name, topics);
+      this.logger.debug('[%s] connected, subscribing %s', this.name, topics);
       return this.client.subscribe(topics);
     }).then(async () => {
-      this.logger.debug('[KafkaConsumer %s] start consuming', this.name);
+      this.logger.debug('[%s] start consuming', this.name);
       while (true) {
         await this.client.consume(
           async (rdMessage: RDKafkaMessageInterface) => {
@@ -191,6 +190,23 @@ export class KafkaConsumer implements ConsumerInterface<RDKafkaConsumer> {
         );
       }
     });
+  }
+
+  gracefulExit(signal?: Signals) {
+    this.logger.info('[%s] received signal %s, start exiting', this.name, signal);
+    this.client.disconnect().then(() => {
+      this.logger.info('[%s] received signal %s, exit by code 0', this.name, signal);
+      process.exit(0);
+    });
+  }
+
+  enableGracefulExit() {
+    for (const signal of ['SIGHUP', 'SIGINT', 'SIGQUIT', 'SIGTERM', 'SIGABRT', 'SIGTSTP']) {
+      process.on(signal as any, (signal: Signals) => {
+        this.gracefulExit(signal);
+      });
+    }
+    this.logger.debug('[%s] graceful exit enabled', this.name);
   }
 }
 

@@ -1,5 +1,4 @@
-import { CommandMessageInterface, MessageInterface } from './interfaces';
-import { Constructor } from 'ava';
+import { CommandMessageInterface, Constructor, MessageInterface } from './interfaces';
 
 export default class Message implements MessageInterface {
   readonly messageId: string;
