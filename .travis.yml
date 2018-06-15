@@ -4,7 +4,7 @@ node_js:
 - 10.4.1
 install:
 - cp package.json package.json.bak
-- npm run install:peers
+- npm run install:peers:ci
 - npm install
 script:
 - npm run lint
