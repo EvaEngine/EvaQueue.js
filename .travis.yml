@@ -3,7 +3,8 @@ node_js:
 - 8
 - 10
 install:
-- npm install && npm run install:peers
+- npm run install:peers
+- npm install
 script:
 - npm run lint
 - npm test
