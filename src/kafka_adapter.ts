@@ -18,6 +18,7 @@ import RDKafkaProducer from './rdkafka/producer';
 import RDKafkaConsumer from './rdkafka/consumer';
 import Signals = NodeJS.Signals;
 import { MnsConfigInterface, MnsPublisher, MnsSubscriber } from './mns_adapter';
+import Timer = NodeJS.Timer;
 
 export interface KafkaConfigInterface extends ConfigInterface {
   connection: RDKafkaConfigInterface;
@@ -144,6 +145,8 @@ export class KafkaConsumer implements ConsumerInterface<RDKafkaConsumer> {
   connected: Boolean = false;
   queue: string;
   name: string;
+  stopped: boolean = false;
+  processing: number = 0;
 
   constructor(input: { client: RDKafkaConsumer, logger: LoggerInterface, queue?: string }) {
     this.client = input.client;
@@ -182,11 +185,14 @@ export class KafkaConsumer implements ConsumerInterface<RDKafkaConsumer> {
       this.logger.debug('[%s] connected, subscribing %s', this.name, topics);
       return this.client.subscribe(topics);
     }).then(async () => {
+      this.stopped = false;
       this.logger.debug('[%s] start consuming', this.name);
-      while (true) {
+      while (this.stopped === false) {
+        this.processing = maxProcessing;
         await this.client.consume(
           async (rdMessage: RDKafkaMessageInterface) => {
             await callback(null, KafkaMessage.factory(rdMessage));
+            this.processing -= 1;
           },
           maxProcessing,
         );
@@ -194,13 +200,67 @@ export class KafkaConsumer implements ConsumerInterface<RDKafkaConsumer> {
     });
   }
 
-  gracefulExit(signal?: Signals) {
+  gracefulExit(
+    signal?: Signals,
+    systemProcess = process,
+    delay: number = 1000,
+    maxCheck: number = 3,
+  ) {
     this.logger.info('[%s] received signal %s, start exiting', this.name, signal);
+    let checkCount: number = 0;
+    let handle: Timer;
+    this.stopped = true;
     this.client.disconnect().then(() => {
-      this.logger.info('[%s] received signal %s, exit by code 0', this.name, signal);
-      process.exit(0);
+      handle = setInterval(
+        () => {
+          if (this.processing < 1) {
+            this.logger.info('[%s] received signal %s, exit by code 0', this.name, signal);
+            clearInterval(handle);
+            systemProcess.exit(0);
+          }
+
+          if (checkCount >= maxCheck) {
+            this.logger.warn(
+              '[%s] received signal %s, exit by timeout, still have %s unfinished messages',
+              this.name,
+              signal,
+              this.processing,
+            );
+            clearInterval(handle);
+            systemProcess.exit(1);
+          }
+          checkCount += 1;
+        },
+        delay,
+      );
+    }).catch((err) => {
+      this.logger.warn(
+        '[%s] received signal %s, exit by stop failing, still have %s unfinished messages',
+        this.name,
+        signal,
+        this.processing,
+        err,
+      );
+      systemProcess.exit(1);
     });
   }
+
+  // gracefulExit(signal?: Signals) {
+  //   this.stopped = true;
+  //   this.logger.info('[%s] received signal %s, start exiting', this.name, signal);
+  //   this.client.disconnect().then(() => {
+  //     this.logger.info('[%s] received signal %s, exit by code 0', this.name, signal);
+  //     process.exit(0);
+  //   }).catch((err) => {
+  //     this.logger.warn(
+  //       '[%s] received signal %s, exit by stop failing, still have %s unfinished messages',
+  //       this.name,
+  //       signal,
+  //       err,
+  //     );
+  //     process.exit(1);
+  //   });
+  // }
 
   enableGracefulExit() {
     for (const signal of ['SIGHUP', 'SIGINT', 'SIGQUIT', 'SIGTERM', 'SIGABRT', 'SIGTSTP']) {
