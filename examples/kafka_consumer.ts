@@ -1,7 +1,7 @@
 import KafkaMessageQueue, { KafkaMessage } from '../src/kafka_adapter';
 
 const kafkaMQ = new KafkaMessageQueue(
-  require('./config').kafka,
+  require('./config').kafka.default,
   console,
 );
 
