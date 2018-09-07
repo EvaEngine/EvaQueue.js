@@ -46,7 +46,7 @@ export abstract class KafkaBasicConsumer {
         // Note: this can throw when you are disconnected. Take care and wrap it in
         // a try catch if that matters to you
         this.consumer.assign(assignment);
-        console.log(`Consumer rebalanced at : `);
+        console.log('Consumer rebalanced at : ');
         for (const assign of assignment) {
           console.log(`   topic ${assign.topic}, partition: ${assign.partition}`);
         }

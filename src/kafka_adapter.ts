@@ -105,7 +105,7 @@ export class KafkaProducer implements ProducerInterface<RDKafkaProducer> {
     if (false === this.connected) {
       await this.client.connect();
       this.connected = true;
-      this.logger.debug('[Producer %s] connected', this.name);
+      this.logger.debug('[%s] connected', this.name);
     }
     return this;
   }

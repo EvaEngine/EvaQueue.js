@@ -9,14 +9,26 @@ import fs from 'fs';
 
 let localConfig = {};
 try {
-  fs.accessSync('./config.local.ts', fs.constants.F_OK);
+  fs.accessSync(__dirname + '/config.local.ts', fs.constants.F_OK);
   localConfig = require('./config.local');
 } catch (e) {
+  console.error(e);
 }
 
 const config = {
   mns: {
     default: {
+      connection: {
+        accountId: 'your_account_id',
+        region: 'hangzhou',
+        keyId: 'your_key_id',
+        keySecret: 'your_key_secret',
+        networkType: '',
+      },
+      defaultTopicName: 'your_topic_name',
+      defaultQueueName: 'your_queue_name',
+    },
+    another: {
       connection: {
         accountId: 'your_account_id',
         region: 'hangzhou',
@@ -52,7 +64,7 @@ const config = {
   },
 };
 
-const finalConfig = _.merge(config, localConfig);
-console.log('config:', finalConfig);
+const finalConfig = _.merge({}, config, localConfig);
+console.log('Loaded config: %j', finalConfig);
 
 module.exports = finalConfig;

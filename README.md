@@ -71,7 +71,7 @@ const consumer = manager.getConsumer();
 consumer.enableGracefulExit();
 ```
 
-### Switch Ali-MNS / Kafka
+### Switch default Ali-MNS / Kafka
 
 Just change config file
 
