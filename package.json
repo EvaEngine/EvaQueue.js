@@ -65,7 +65,7 @@
     "lint"
   ],
   "dependencies": {
-    "lodash": "^4.17.10"
+    "lodash": "^4.17.11"
   },
   "peerDependencies": {
     "ali-mns": "^2.6.5",
@@ -73,15 +73,15 @@
   },
   "devDependencies": {
     "@types/lodash": "^4.14.116",
-    "@types/node": "^10.9.4",
+    "@types/node": "^10.11.4",
     "ava": "^1.0.0-beta.8",
     "nyc": "^13.0.1",
     "pre-commit": "^1.2.2",
-    "semantic-release": "^15.9.12",
-    "travis-deploy-once": "^5.0.7",
+    "semantic-release": "^15.9.17",
+    "travis-deploy-once": "^5.0.9",
     "ts-node": "^7.0.1",
     "tslint": "^5.11.0",
     "tslint-config-airbnb": "^5.11.0",
-    "typescript": "^3.0.3"
+    "typescript": "^3.1.1"
   }
 }
