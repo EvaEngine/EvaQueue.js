@@ -23,6 +23,7 @@ export interface MnsConfigInterface extends ConfigInterface {
     keySecret: string
     region: string,
     networkType: string,
+    zone: string,
   };
   defaultTopicName: string;
   defaultQueueName: string;
@@ -377,6 +378,7 @@ export default class MnsMessageQueue implements MessageQueueAdapterInterface {
         keySecret,
         region,
         networkType,
+        zone = 'cn',
       },
       defaultQueueName,
     } = config;
@@ -387,7 +389,7 @@ export default class MnsMessageQueue implements MessageQueueAdapterInterface {
     const client = new MQ(
       queueName,
       account,
-      new Region(region, networkType),
+      new Region(region, networkType, zone),
     );
 
     this.producer = new MnsProducer({ client, logger });

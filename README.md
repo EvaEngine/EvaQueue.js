@@ -112,4 +112,4 @@ npm run install:peers
 ```
 
 
-node-rdkafka promisfy is from https://github.com/joway/node-kfk
+node-rdkafka promisfy codes some from https://github.com/joway/node-kfk
