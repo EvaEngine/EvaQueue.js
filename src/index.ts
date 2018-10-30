@@ -73,7 +73,15 @@ export default class MessageQueue extends BaseMessageQueue {
     instanceKey: string = this.config.defaultInstance,
     queueName?: string,
   ): ProducerInterface<any> {
-    assert(this.instances.has(instanceKey), 'MQ Adapter not inited');
+    if (!this.instances.has(instanceKey)) {
+      const [name, configKey] = instanceKey.split('_');
+      if (name === 'kafka') {
+        this.factoryKafka(configKey);
+      } else {
+        this.factoryMns(configKey);
+      }
+    }
+    assert(this.instances.has(instanceKey), `Instance key ${instanceKey} incorrect`);
     return (this.instances.get(instanceKey) as MessageQueueAdapterInterface).getProducer(queueName);
   }
 
@@ -81,7 +89,15 @@ export default class MessageQueue extends BaseMessageQueue {
     instanceKey: string = this.config.defaultInstance,
     queueName?: string,
   ): ConsumerInterface<any> {
-    assert(this.instances.has(instanceKey), 'MQ Adapter not inited');
+    if (!this.instances.has(instanceKey)) {
+      const [name, configKey] = instanceKey.split('_');
+      if (name === 'kafka') {
+        this.factoryKafka(configKey);
+      } else {
+        this.factoryMns(configKey);
+      }
+    }
+    assert(this.instances.has(instanceKey), `Instance key ${instanceKey} incorrect`);
     return (this.instances.get(instanceKey) as MessageQueueAdapterInterface).getConsumer(queueName);
   }
 }

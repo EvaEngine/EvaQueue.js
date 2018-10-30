@@ -96,6 +96,16 @@ to
 }
 ```
 
+or switch manually by:
+
+``` js
+const manager = new MQ(
+  require('./config'),
+  console,
+);
+const consumer = manager.getConsumer('mns_another');
+```
+
 
 ### Try more examples
 
