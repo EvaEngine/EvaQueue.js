@@ -12,6 +12,7 @@ import {
   ProducerInterface,
   PublisherInterface,
   SubscriberInterface,
+  ReceiptInterface,
 } from './interfaces';
 import Timer = NodeJS.Timer;
 import Signals = NodeJS.Signals;
@@ -172,6 +173,26 @@ export class MnsConsumer implements ConsumerInterface<AliMNS.MQ> {
       return autoConsume;
     };
     return receiver;
+  }
+
+  async receive(): Promise<ReceiptInterface> {
+    const rawMessage = await this.client.recvP();
+    const message = MnsMessage.factory(rawMessage);
+    return {
+      message,
+      handler: rawMessage.Message.ReceiptHandle,
+    };
+  }
+
+  async commit(handler: string) {
+    this.client.deleteP(handler);
+  }
+
+  async consume(): Promise<MessageInterface> {
+    const rawMessage = await this.client.recvP();
+    const message = MnsMessage.factory(rawMessage);
+    await this.commit(rawMessage.Message.ReceiptHandle);
+    return message;
   }
 
   receiving(

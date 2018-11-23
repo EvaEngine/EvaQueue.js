@@ -14,6 +14,11 @@ export interface MessageInterface {
   // TODO: server Message ID
 }
 
+export interface ReceiptInterface {
+  handler: string;
+  message: MessageInterface;
+}
+
 export interface CommandMessageInterface {
   command: string;
 
@@ -39,9 +44,15 @@ export interface ConsumerInterface<C> {
 
   getClient(): C;
 
-  consuming(callback: any, maxProcessing: number): void;
+  receive(): Promise<ReceiptInterface>;
+
+  commit(handler: string): void;
+
+  consume(): Promise<MessageInterface>;
 
   receiving(callback: () => {}, maxProcessing: number): void;
+
+  consuming(callback: any, maxProcessing: number): void;
 
   gracefulExit(): void;
 
