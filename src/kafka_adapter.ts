@@ -10,7 +10,6 @@ import {
   PublisherInterface,
   SubscriberInterface,
   MessageTopicAdapterInterface,
-  ReceiptInterface,
 } from './interfaces';
 import {
   RDKafkaConsumerConfigInterface,
@@ -170,11 +169,11 @@ export class KafkaConsumer implements ConsumerInterface<RDKafkaConsumer> {
     return this;
   }
 
-  async receive(): Promise<ReceiptInterface> {
+  async receive(): Promise<MessageInterface> {
     throw new Error('Kafka adapter not support yet');
   }
 
-  async commit(handler: string) {
+  async commit(message: MessageInterface) {
     throw new Error('Kafka adapter not support yet');
   }
 
