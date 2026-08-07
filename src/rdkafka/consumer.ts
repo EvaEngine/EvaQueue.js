@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import * as Kafka from 'node-rdkafka';
 
 import type {
@@ -103,7 +102,7 @@ export abstract class KafkaBasicConsumer {
   }
 
   subscribe(topics: string[]) {
-    this.topics = _.uniq(_.concat(topics, this.topics));
+    this.topics = [...new Set([...topics, ...this.topics])];
     // synchronously
     this.consumer.subscribe(this.topics);
     // refresh offset
@@ -201,7 +200,7 @@ export default class RDKafkaConsumer extends KafkaBasicConsumer {
   }
 
   subscribe(topics: string[]) {
-    this.topics = _.uniq(_.concat(topics, this.topics));
+    this.topics = [...new Set([...topics, ...this.topics])];
     // synchronously
     this.consumer.subscribe(this.topics);
   }

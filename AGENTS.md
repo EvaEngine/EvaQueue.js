@@ -9,7 +9,7 @@
 - **描述**: 统一的高性能消息队列 API 抽象层，支持 Kafka、AliMNS 等后端
 - **语言**: TypeScript (Pure ESM)
 - **包管理器**: pnpm (本地开发) / npm (CI 发布)
-- **Node.js**: >= 18.0.0 (推荐 24 LTS)
+- **Node.js**: >= 24.0.0
 - **许可证**: MIT
 
 ## AI 工作流程

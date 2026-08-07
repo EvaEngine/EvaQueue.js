@@ -135,6 +135,9 @@ export class CommandMessage extends Message implements CommandMessageInterface {
       name,
       spec,
     } = this.content as any;
+    if (!spec) {
+      return String(name);
+    }
     const specString = Object
       .entries(spec)
       .map(([key, value]) => {

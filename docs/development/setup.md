@@ -2,7 +2,7 @@
 
 ## 前置要求
 
-- **Node.js**: >= 18.0.0 (推荐使用 fnm 管理版本)
+- **Node.js**: >= 24.0.0 (推荐使用 fnm 管理版本)
 - **pnpm**: >= 10.x (推荐 `npm install -g pnpm`)
 
 ## 快速开始
@@ -55,14 +55,14 @@ pnpm clean            # 清理 lib/
 
 ### 测试
 
-测试使用 `ava` + `c8`：
+测试使用 Node.js 内置 `node:test` + `--experimental-test-coverage`：
 
 ```bash
 # 运行所有测试
 pnpm test
 
 # 仅运行特定测试
-pnpm ava test/message.ts
+node --import tsx/esm --test test/message.ts
 ```
 
 ### 代码检查

@@ -33,11 +33,12 @@ abstract class BaseMessageQueue {
   }
 
   factoryAdapter(name: string, configKey: string, adapterClass: Constructor) {
-    const instance = new adapterClass(this.config[name][configKey], this.logger);
     const instanceKey = `${name}_${configKey}`;
-    if (this.instances.has(instanceKey) === false) {
-      this.instances.set(instanceKey, instance);
+    if (this.instances.has(instanceKey)) {
+      return this.instances.get(instanceKey);
     }
+    const instance = new adapterClass(this.config[name][configKey], this.logger);
+    this.instances.set(instanceKey, instance);
     return instance;
   }
 
@@ -48,7 +49,7 @@ abstract class BaseMessageQueue {
     const [name, configKey] = instanceKey.split('_');
     if (name === 'kafka') {
       await this.factoryKafka(configKey);
-    } else {
+    } else if (name === 'mns') {
       await this.factoryMns(configKey);
     }
   }

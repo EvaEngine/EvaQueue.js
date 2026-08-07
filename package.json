@@ -24,7 +24,7 @@
   "scripts": {
     "build": "tsc",
     "clean": "rm -rf lib",
-    "test": "c8 ava",
+    "test": "node --experimental-test-coverage --import tsx/esm --test test/message.ts test/index.ts test/utils/case_converter.ts",
     "lint": "eslint src/ test/",
     "lint:fix": "eslint src/ test/ --fix",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
@@ -34,60 +34,27 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/bmqb/EvaQueue.js.git"
+    "url": "https://github.com/EvaEngine/EvaQueue.js.git"
   },
   "keywords": [],
   "license": "MIT",
-  "author": "BMQB Team",
+  "author": "AlloVince",
   "bugs": {
-    "url": "https://github.com/bmqb/EvaQueue.js/issues"
+    "url": "https://github.com/EvaEngine/EvaQueue.js/issues"
   },
-  "homepage": "https://github.com/bmqb/EvaQueue.js#readme",
+  "homepage": "https://github.com/EvaEngine/EvaQueue.js#readme",
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=24.0.0"
   },
   "packageManager": "pnpm@10.8.0",
-  "ava": {
-    "files": [
-      "test/**/*.ts"
-    ],
-    "extensions": {
-      "ts": "module"
-    },
-    "nodeArguments": [
-      "--import=tsx"
-    ],
-    "failFast": false,
-    "tap": false
-  },
-  "c8": {
-    "include": [
-      "src/**/*.ts"
-    ],
-    "exclude": [
-      "lib/**/*",
-      "src/@types/ali-mns/index.d.ts"
-    ],
-    "sourceMap": true,
-    "reporter": [
-      "lcov",
-      "text",
-      "html"
-    ]
-  },
-  "dependencies": {
-    "lodash": "^4.17.21"
-  },
+  "dependencies": {},
   "peerDependencies": {
     "ali-mns": "^2.6.5",
     "node-rdkafka": "^2.3.3"
   },
   "devDependencies": {
     "@eslint/js": "^9.22.0",
-    "@types/lodash": "^4.17.15",
-    "@types/node": "^22.14.0",
-    "ava": "^6.3.0",
-    "c8": "^10.1.3",
+    "@types/node": "^24.0.0",
     "eslint": "^9.22.0",
     "eslint-config-prettier": "^10.1.1",
     "husky": "^9.1.7",

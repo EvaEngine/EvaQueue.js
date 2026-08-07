@@ -35,6 +35,9 @@ CPPFLAGS=-I/usr/local/opt/openssl/include LDFLAGS=-L/usr/local/opt/openssl/lib n
 Produce a message to queue:
 
 ``` js
+import { createRequire } from 'node:module';
+const require = createRequire(import.meta.url);
+
 import MQ from 'evaqueue';
 import Message from 'evaqueue/message';
 
@@ -51,6 +54,9 @@ console.log('[%s] producing %o', producer.name, msg);
 Consume messages from queue:
 
 ``` js
+import { createRequire } from 'node:module';
+const require = createRequire(import.meta.url);
+
 import MQ from 'evaqueue';
 
 const manager = new MQ(
@@ -90,11 +96,14 @@ to
 or switch manually by:
 
 ``` js
+import { createRequire } from 'node:module';
+const require = createRequire(import.meta.url);
+
 const manager = new MQ(
   require('./config'),
   console,
 );
-const consumer = manager.getConsumer('mns_another');
+const consumer = await manager.getConsumer('mns_another');
 ```
 
 
@@ -112,5 +121,5 @@ pnpm install
 
 ## Requirements
 
-- Node.js >= 18.0.0
+- Node.js >= 24.0.0
 - pnpm (recommended for development) or npm
