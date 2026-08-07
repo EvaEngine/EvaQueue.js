@@ -24,7 +24,7 @@
   "scripts": {
     "build": "tsc",
     "clean": "rm -rf lib",
-    "test": "node --experimental-test-coverage --import tsx/esm --test test/message.ts test/queue.ts test/topic.ts test/utils/case_converter.ts",
+    "test": "node --experimental-test-coverage --import tsx/esm --test test/message.ts test/queue.ts test/topic.ts test/nats.ts test/utils/case_converter.ts",
     "lint": "eslint src/ test/",
     "lint:fix": "eslint src/ test/ --fix",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
@@ -54,11 +54,15 @@
   },
   "peerDependencies": {
     "@confluentinc/kafka-javascript": "^1.10.0",
+    "@nats-io/jetstream": "^3.4.0",
+    "@nats-io/transport-node": "^3.4.0",
     "ali-mns": "^2.6.5"
   },
   "devDependencies": {
     "@confluentinc/kafka-javascript": "^1.10.0",
     "@eslint/js": "^9.22.0",
+    "@nats-io/jetstream": "^3.4.0",
+    "@nats-io/transport-node": "^3.4.0",
     "@types/node": "^24.0.0",
     "eslint": "^9.22.0",
     "eslint-config-prettier": "^10.1.1",

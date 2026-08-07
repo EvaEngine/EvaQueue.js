@@ -8,25 +8,25 @@
 EvaQueue.js 使用适配器模式抽象不同消息队列后端：
 
 ```
-┌──────────────────────────────────────────────────┐
-│                   User Code                       │
-├──────────────────────────────────────────────────┤
-│              MessageQueue / MessageTopic          │
-├────────────────────┬─────────────────────────────┤
-│  KafkaAdapter      │  MnsAdapter                 │
-│  (kafka-javascript)│  (ali-mns)                  │
-├────────────────────┴─────────────────────────────┤
-│  RDKafkaProducer / RDKafkaConsumer               │
-│  (底层封装)                                       │
-└──────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────┐
+│                        User Code                              │
+├──────────────────────────────────────────────────────────────┤
+│                 MessageQueue / MessageTopic                   │
+├───────────────────┬────────────────────┬─────────────────────┤
+│   KafkaAdapter    │    MnsAdapter      │    NatsAdapter      │
+│ (kafka-javascript)│    (ali-mns)       │   (jetstream)       │
+├───────────────────┴────────────────────┴─────────────────────┤
+│              RDKafkaProducer / RDKafkaConsumer                │
+│                      (底层封装)                                │
+└──────────────────────────────────────────────────────────────┘
 ```
 
 ### 核心规则
 
 1. **统一接口**: 所有适配器必须实现 `MessageQueueAdapterInterface` 或 `MessageTopicAdapterInterface`
-2. **延迟加载**: 适配器通过 `factoryKafka()` / `factoryMns()` 延迟加载，使用动态 `import()`
+2. **延迟加载**: 适配器通过 `factoryKafka()` / `factoryMns()` / `factoryNats()` 延迟加载，使用动态 `import()`
 3. **实例缓存**: 适配器实例缓存在 `BaseMessageQueue.instances` Map 中，避免重复创建
-4. **Peer 依赖**: `ali-mns` 和 `@confluentinc/kafka-javascript` 是 peer 依赖，不由 EvaQueue 直接管理
+4. **Peer 依赖**: `ali-mns`、`@confluentinc/kafka-javascript`、`@nats-io/transport-node` 和 `@nats-io/jetstream` 是 peer 依赖，不由 EvaQueue 直接管理
 
 ## 模块边界
 
@@ -57,6 +57,14 @@ EvaQueue.js 使用适配器模式抽象不同消息队列后端：
 - `MnsMessageTopic`: 主题模式适配器
 - `MnsProducer` / `MnsConsumer`: 具体实现
 - `MnsMessage` / `MnsCommandMessage`: MNS 特定消息
+
+### src/nats_adapter.ts — NATS JetStream 适配器
+- `NatsMessageQueue`: 队列模式适配器
+- `NatsMessageTopic`: 主题模式适配器
+- `NatsProducer` / `NatsConsumer`: 具体实现
+- `NatsMessage` / `NatsCommandMessage`: NATS 特定消息
+- 使用 `@nats-io/transport-node` 建立连接，`@nats-io/jetstream` 提供 JetStream 客户端
+- 队列/主题通过 JetStream 的 Stream + Consumer 实现
 
 ### src/rdkafka/ — @confluentinc/kafka-javascript 封装
 - `RDKafkaProducer`: 底层 Kafka Producer 封装

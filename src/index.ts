@@ -51,12 +51,16 @@ abstract class BaseMessageQueue {
       await this.factoryKafka(configKey);
     } else if (name === 'mns') {
       await this.factoryMns(configKey);
+    } else if (name === 'nats') {
+      await this.factoryNats(configKey);
     }
   }
 
   protected abstract factoryMns(configKey?: string): any;
 
   protected abstract factoryKafka(configKey?: string): any;
+
+  protected abstract factoryNats(configKey?: string): any;
 }
 
 export default class MessageQueue extends BaseMessageQueue {
@@ -72,6 +76,13 @@ export default class MessageQueue extends BaseMessageQueue {
     const { default: kafkaAdapter } = await import('./kafka_adapter.js');
     MessageQueue.registerAdapter(name, kafkaAdapter);
     return this.factoryAdapter(name, configKey, kafkaAdapter);
+  }
+
+  async factoryNats(configKey = 'default') {
+    const name = 'nats';
+    const { default: natsAdapter } = await import('./nats_adapter.js');
+    MessageQueue.registerAdapter(name, natsAdapter);
+    return this.factoryAdapter(name, configKey, natsAdapter);
   }
 
   async getProducer(
@@ -110,6 +121,13 @@ export class MessageTopic extends BaseMessageQueue {
     const { KafkaMessageTopic: kafkaAdapter } = await import('./kafka_adapter.js');
     MessageTopic.registerAdapter(name, kafkaAdapter);
     return this.factoryAdapter(name, configKey, kafkaAdapter);
+  }
+
+  async factoryNats(configKey = 'default') {
+    const name = 'nats';
+    const { NatsMessageTopic: natsAdapter } = await import('./nats_adapter.js');
+    MessageTopic.registerAdapter(name, natsAdapter);
+    return this.factoryAdapter(name, configKey, natsAdapter);
   }
 
   getPublisher(

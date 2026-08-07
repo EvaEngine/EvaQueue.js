@@ -23,6 +23,7 @@
 - ✅ 代码现代化 (类型修复、导入规范)
 - ✅ 文档体系建立
 - ✅ `node-rdkafka` → `@confluentinc/kafka-javascript` 迁移
+- ✅ NATS JetStream 适配器 (nats + @nats-io/jetstream)
 
 ### 验证结果
 
@@ -30,8 +31,8 @@
 |--------|------|
 | `pnpm build` (tsc) | ✅ 0 errors |
 | `pnpm lint` (eslint) | ✅ 0 errors, 6 warnings |
-| `pnpm test` (c8 + ava) | ✅ 3/3 passed, 100% coverage |
+| `pnpm test` (c8 + ava) | ✅ 58/58 passed, 100% coverage |
 
 ### 下次任务 (一次只完成一个)
 
-1. 加入对 NATS 消息队列的支持，使用 nats @nats-io/jetstream
+1. (暂无)

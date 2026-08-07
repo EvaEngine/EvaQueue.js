@@ -19,7 +19,7 @@ Features:
 ## Quick start
 
 ```
-npm install evaqueue ali-mns @confluentinc/kafka-javascript
+npm install evaqueue ali-mns @confluentinc/kafka-javascript @nats-io/transport-node @nats-io/jetstream
 ```
 
 EvaQueue.js will installed as peer dependency, you are free to install queue libs which only required.

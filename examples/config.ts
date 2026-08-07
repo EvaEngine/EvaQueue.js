@@ -69,6 +69,17 @@ const config = {
       defaultQueueName: 'your_topic',
     },
   },
+  nats: {
+    default: {
+      connection: {
+        servers: 'localhost:4222',
+      },
+      stream: 'your_stream',
+      consumer: 'your_consumer',
+      defaultQueueName: 'your_queue',
+      defaultTopicName: 'your_topic',
+    },
+  },
 };
 
 const finalConfig = _.merge({}, config, localConfig);

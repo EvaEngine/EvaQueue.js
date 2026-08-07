@@ -24,11 +24,14 @@ EvaQueue.js 是一个统一消息队列 API 抽象层，采用适配器模式设
 │  │ KafkaMessageQueue   │  │ MnsMessageQueue     │          │
 │  │ KafkaMessageTopic   │  │ MnsMessageTopic     │          │
 │  └─────────────────────┘  └─────────────────────┘          │
-├──────────────────────────┬──────────────────────────────────┤
-│  @confluentinc/kafka-javascript│  ali-mns (peer)                  │
-│  (peer)                        │                                 │
-│  src/rdkafka/                  │  (external)                     │
-└──────────────────────────┴──────────────────────────────────┘
+│  ┌─────────────────────┐                                   │
+│  │ NatsMessageQueue    │  NATS JetStream 适配器            │
+│  │ NatsMessageTopic    │                                   │
+│  └─────────────────────┘                                   │
+├─────────────────────────────────────────────────────────────┤
+│  Peer 依赖: @confluentinc/kafka-javascript, ali-mns,        │
+│              @nats-io/transport-node, @nats-io/jetstream    │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 ### 数据流
@@ -51,7 +54,7 @@ Consumer → MessageQueue.getConsumer() → Adapter.consuming() → Callback
 - **影响**: 用户代码需要 `await manager.getProducer()`
 
 ### 3. Peer Dependencies
-- **决策**: `ali-mns` 和 `@confluentinc/kafka-javascript` 保持 peer 依赖
+- **决策**: `ali-mns`、`@confluentinc/kafka-javascript`、`@nats-io/transport-node` 和 `@nats-io/jetstream` 保持 peer 依赖
 - **理由**: 用户只需安装自己需要的队列后端
 - **影响**: 适配器在首次使用时通过动态 `import()` 加载
 

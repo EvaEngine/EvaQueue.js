@@ -6,7 +6,7 @@
 
 - **项目名称**: EvaQueue.js
 - **仓库**: https://github.com/bmqb/EvaQueue.js
-- **描述**: 统一的高性能消息队列 API 抽象层，支持 Kafka、AliMNS 等后端
+- **描述**: 统一的高性能消息队列 API 抽象层，支持 Kafka、AliMNS、NATS JetStream 等后端
 - **语言**: TypeScript (Pure ESM)
 - **包管理器**: pnpm (本地开发) / npm (CI 发布)
 - **Node.js**: >= 24.0.0
@@ -57,6 +57,7 @@ pnpm release          # semantic-release 发布
 │   ├── message.ts                # Message / CommandMessage
 │   ├── kafka_adapter.ts          # Kafka 适配器
 │   ├── mns_adapter.ts            # AliMNS 适配器
+│   ├── nats_adapter.ts           # NATS JetStream 适配器
 │   ├── types.ts                  # 共享类型
 │   ├── rdkafka/                  # @confluentinc/kafka-javascript 封装
 │   │   ├── producer.ts
@@ -67,6 +68,13 @@ pnpm release          # semantic-release 发布
 │       └── case_converter.ts     # 驼峰/蛇形互转
 ├── test/
 │   ├── message.ts
+│   ├── queue.ts
+│   ├── topic.ts
+│   ├── nats.ts
+│   ├── mocks/
+│   │   ├── kafka.ts
+│   │   ├── mns.ts
+│   │   └── nats.ts
 │   └── utils/
 │       └── case_converter.ts
 ├── examples/                     # 使用示例
