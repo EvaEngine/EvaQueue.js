@@ -57,8 +57,6 @@ export abstract class KafkaBasicConsumer {
     });
 
     this.consumer = new Kafka.KafkaConsumer(conf as any, topicConf);
-
-    // this.setGracefulDeath();
   }
 
   abstract gracefulDead(): Promise<boolean>;
@@ -89,24 +87,12 @@ export abstract class KafkaBasicConsumer {
     });
   }
 
-  private setGracefulDeath() {
-    const gracefulDeath = async () => {
-      this.dead = true;
-      await this.gracefulDead();
-      await this.disconnect();
-      process.exit(0);
-    };
-    process.on('SIGINT', () => { void gracefulDeath(); });
-    process.on('SIGQUIT', () => { void gracefulDeath(); });
-    process.on('SIGTERM', () => { void gracefulDeath(); });
-  }
-
   subscribe(topics: string[]) {
     this.topics = [...new Set([...topics, ...this.topics])];
     // synchronously
     this.consumer.subscribe(this.topics);
     // refresh offset
-    void this.initOffsetStroe();
+    void this.initOffsetStore();
   }
 
   unsubscribe() {
@@ -138,7 +124,7 @@ export abstract class KafkaBasicConsumer {
     });
   }
 
-  async initOffsetStroe() {
+  async initOffsetStore() {
     const meta = await this.getMetadata({ timeout: 1000 });
     for (const topic of meta.topics) {
       if (this.topics.includes(topic.name)) {

@@ -66,22 +66,6 @@ export abstract class KafkaBasicProducer {
       });
     });
   }
-
-  private setGracefulDeath() {
-    const gracefulDeath = async () => {
-      console.log('Producer graceul death begin');
-
-      this.dead = true;
-      await this.gracefulDead();
-      await this.disconnect();
-
-      console.log('Producer graceul death success');
-      process.exit(0);
-    };
-    process.on('SIGINT', () => { void gracefulDeath(); });
-    process.on('SIGQUIT', () => { void gracefulDeath(); });
-    process.on('SIGTERM', () => { void gracefulDeath(); });
-  }
 }
 
 export default class RDKafkaProducer extends KafkaBasicProducer {

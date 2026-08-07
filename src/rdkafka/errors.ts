@@ -2,9 +2,7 @@ export const KAFKA_ERROR_CODE = {
   UNDEFINED: -1,
 
   CONNECTING: 1,
-  CONNECTED: 2,
   DISCONNECT: 3,
-  CONNECTION_NOT_READY: 4,
   CONNECTION_DEAD: 5,
 
   PRODUCER_RUNTIME: 101,
@@ -31,13 +29,6 @@ export class DisconnectError extends KfkError {
   constructor(message: string) {
     super(message);
     this.code = KAFKA_ERROR_CODE.DISCONNECT;
-  }
-}
-
-export class ConnectionNotReadyError extends KfkError {
-  constructor(message: string) {
-    super(message);
-    this.code = KAFKA_ERROR_CODE.CONNECTION_NOT_READY;
   }
 }
 

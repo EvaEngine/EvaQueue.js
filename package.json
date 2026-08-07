@@ -24,7 +24,7 @@
   "scripts": {
     "build": "tsc",
     "clean": "rm -rf lib",
-    "test": "node --experimental-test-coverage --import tsx/esm --test test/message.ts test/index.ts test/utils/case_converter.ts",
+    "test": "node --experimental-test-coverage --import tsx/esm --test test/message.ts test/queue.ts test/topic.ts test/utils/case_converter.ts",
     "lint": "eslint src/ test/",
     "lint:fix": "eslint src/ test/ --fix",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",

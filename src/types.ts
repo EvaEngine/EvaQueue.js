@@ -34,11 +34,3 @@ export type Signals =
   | 'SIGWINCH'
   | 'SIGXCPU'
   | 'SIGXFSZ';
-
-export interface Timer {
-  ref(): void;
-  unref(): void;
-  hasRef(): boolean;
-  refresh(): Timer;
-  [Symbol.toPrimitive](): number;
-}

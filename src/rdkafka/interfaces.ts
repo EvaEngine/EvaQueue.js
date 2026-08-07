@@ -8,11 +8,6 @@ export interface RDKafkaMessageInterface {
   timestamp?: number; // timestamp of message creation
 }
 
-export interface RDKafkaMessageErrorInterface {
-  message: RDKafkaMessageInterface;
-  error: Error;
-}
-
 export interface RDTopicPartitionInterface {
   topic: string;
   partition: number;

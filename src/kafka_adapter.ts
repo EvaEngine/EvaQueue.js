@@ -261,23 +261,6 @@ export class KafkaConsumer implements ConsumerInterface<RDKafkaConsumer> {
     });
   }
 
-  // gracefulExit(signal?: Signals) {
-  //   this.stopped = true;
-  //   this.logger.info('[%s] received signal %s, start exiting', this.name, signal);
-  //   this.client.disconnect().then(() => {
-  //     this.logger.info('[%s] received signal %s, exit by code 0', this.name, signal);
-  //     process.exit(0);
-  //   }).catch((err) => {
-  //     this.logger.warn(
-  //       '[%s] received signal %s, exit by stop failing, still have %s unfinished messages',
-  //       this.name,
-  //       signal,
-  //       err,
-  //     );
-  //     process.exit(1);
-  //   });
-  // }
-
   enableGracefulExit() {
     for (const signal of ['SIGHUP', 'SIGINT', 'SIGQUIT', 'SIGTERM', 'SIGABRT', 'SIGTSTP']) {
       process.on(signal as any, (signal: Signals) => {
@@ -349,7 +332,7 @@ export default class KafkaMessageQueue implements MessageQueueAdapterInterface {
   consumer: KafkaConsumer;
 
   /**
-   * @param {MnsConfigInterface} config
+   * @param {KafkaConfigInterface} config
    * @param {LoggerInterface} logger
    * @param {string} inputQueueName
    */

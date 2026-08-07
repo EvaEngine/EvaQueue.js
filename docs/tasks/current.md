@@ -31,10 +31,7 @@
 | `pnpm lint` (eslint) | ✅ 0 errors, 6 warnings |
 | `pnpm test` (c8 + ava) | ✅ 3/3 passed, 100% coverage |
 
-### 下次任务建议
+### 下次任务 (一次只完成一个)
 
-1. **移除 lodash 依赖**: 使用原生 `String.prototype.replace` 和 `Set` 替代 `_.camelCase`/`_.uniq`/`_.concat`
-2. **增强类型安全**: 为 `ali-mns` 编写完整类型定义
-3. **添加集成测试**: 使用 Testcontainers 测试 Kafka/MNS 适配器
-4. **性能优化**: 评估 `node-rdkafka` 升级到 v3.x
-5. **文档完善**: 添加 API 文档 (TypeDoc)
+1. 在对外接口不变的前提下，将依赖 `node-rdkafka` 改为 `@confluentinc/kafka-javascript`
+2. 加入对 NATS 消息队列的支持 ，使用 nats @nats-io/jetstream
