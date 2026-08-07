@@ -1,28 +1,23 @@
-import RDKafkaConsumer from '../src/rdkafka/consumer';
-import {
+import { createRequire } from 'node:module';
+import RDKafkaConsumer from '../src/rdkafka/consumer.js';
+import type {
   RDKafkaMessageInterface,
-} from '../src/rdkafka/interfaces';
+} from '../src/rdkafka/interfaces.js';
 
+const require = createRequire(import.meta.url);
 const config = require('./config');
-const consumer = new RDKafkaConsumer(Object.assign(config.kafka.default.connection, config.kafka.default.consumer));
-const randomInt = (min: number, max: number) => {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-};
-const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+const consumer = new RDKafkaConsumer({ ...config.kafka.default.connection, ...config.kafka.default.consumer });
 
-(async () => {
-  await consumer.connect();
-  await consumer.subscribe(config.kafka.default.defaultQueueName);
-  while (true) {
-    await consumer.consume(
-      async (message: RDKafkaMessageInterface) => {
-        // await sleep(randomInt(1000, 3000));
-        console.log(
-          `topic: ${message.topic} offset : ${message.offset}
+await consumer.connect();
+await consumer.subscribe(config.kafka.default.defaultQueueName);
+while (true) {
+  await consumer.consume(
+    async (message: RDKafkaMessageInterface) => {
+      console.log(
+        `topic: ${message.topic} offset : ${message.offset}
           val: ${message.value.toString('utf-8')}`,
-        );
-      },
-      3,
-    );
-  }
-})();
+      );
+    },
+    3,
+  );
+}

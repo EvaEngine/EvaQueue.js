@@ -1,4 +1,4 @@
-export type Constructor = (new (...args: Array<any>) => any);
+export type Constructor = new (...args: any[]) => any;
 
 export interface MessageInterface {
   queueName?: string;
@@ -45,9 +45,9 @@ export interface ConsumerInterface<C> {
 
   consume(): Promise<MessageInterface>;
 
-  receiving(callback: () => {}, maxProcessing: number): void;
+  receiving(callback: (err: Error | null, msg: MessageInterface) => void, maxProcessing: number): void;
 
-  consuming(callback: any, maxProcessing: number): void;
+  consuming(callback: (err: Error | null, msg: MessageInterface) => void, maxProcessing: number): void;
 
   gracefulExit(): void;
 

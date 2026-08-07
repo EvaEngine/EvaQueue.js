@@ -1,7 +1,7 @@
-import * as consumer from './consumer';
-import * as producer from './producer';
-import * as interfaces from './interfaces';
-import * as errors from './errors';
+import * as consumer from './consumer.js';
+import * as producer from './producer.js';
+import * as interfaces from './interfaces.js';
+import * as errors from './errors.js';
 
 export {
   consumer,

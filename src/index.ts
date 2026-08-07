@@ -1,15 +1,17 @@
-import camelCase from 'lodash/camelCase';
-import assert from 'assert';
-import {
+import assert from 'node:assert';
+import type {
   Constructor,
   ConsumerInterface,
   LoggerInterface,
-  MessageQueueAdapterInterface, MessageTopicAdapterInterface,
-  ProducerInterface, PublisherInterface, SubscriberInterface,
-} from './interfaces';
+  MessageQueueAdapterInterface,
+  MessageTopicAdapterInterface,
+  ProducerInterface,
+  PublisherInterface,
+  SubscriberInterface,
+} from './interfaces.js';
 
 abstract class BaseMessageQueue {
-  config: any;
+  config: Record<string, any>;
   logger: LoggerInterface;
   instances: Map<string, MessageQueueAdapterInterface | MessageTopicAdapterInterface>;
   static adapters: Map<string, Constructor> = new Map<string, Constructor>();
@@ -20,15 +22,10 @@ abstract class BaseMessageQueue {
     }
   }
 
-  constructor(config: any, logger: LoggerInterface) {
+  constructor(config: Record<string, any>, logger: LoggerInterface) {
     this.config = config;
     this.logger = logger;
     this.instances = new Map<string, any>();
-    if (this.config.defaultInstance) {
-      const [adapter, configKey] = this.config.defaultInstance.split('_');
-      const method = camelCase(`factory_${adapter}`);
-      (this as any)[method](configKey);
-    }
   }
 
   getAdapter(instanceKey?: string) {
@@ -36,90 +33,81 @@ abstract class BaseMessageQueue {
   }
 
   factoryAdapter(name: string, configKey: string, adapterClass: Constructor) {
-    const instance = new adapterClass(
-      this.config[name][configKey],
-      this.logger,
-    );
+    const instance = new adapterClass(this.config[name][configKey], this.logger);
     const instanceKey = `${name}_${configKey}`;
     if (this.instances.has(instanceKey) === false) {
       this.instances.set(instanceKey, instance);
     }
     return instance;
   }
+
+  protected async ensureInstance(instanceKey: string): Promise<void> {
+    if (this.instances.has(instanceKey)) {
+      return;
+    }
+    const [name, configKey] = instanceKey.split('_');
+    if (name === 'kafka') {
+      await this.factoryKafka(configKey);
+    } else {
+      await this.factoryMns(configKey);
+    }
+  }
+
+  protected abstract factoryMns(configKey?: string): any;
+
+  protected abstract factoryKafka(configKey?: string): any;
 }
 
 export default class MessageQueue extends BaseMessageQueue {
-  /**
-   * @returns {MnsMessageQueue}
-   */
-  factoryMns(configKey = 'default') {
+  async factoryMns(configKey = 'default') {
     const name = 'mns';
-    const mnsAdapter = require('./mns_adapter').default;
+    const { default: mnsAdapter } = await import('./mns_adapter.js');
     MessageQueue.registerAdapter(name, mnsAdapter);
     return this.factoryAdapter(name, configKey, mnsAdapter);
   }
 
-  /**
-   * @returns {KafkaMessageQueue}
-   */
-  factoryKafka(configKey = 'default') {
+  async factoryKafka(configKey = 'default') {
     const name = 'kafka';
-    const kafkaAdapter = require('./kafka_adapter').default;
+    const { default: kafkaAdapter } = await import('./kafka_adapter.js');
     MessageQueue.registerAdapter(name, kafkaAdapter);
     return this.factoryAdapter(name, configKey, kafkaAdapter);
   }
 
-  getProducer(
+  async getProducer(
     instanceKey: string = this.config.defaultInstance,
     queueName?: string,
-  ): ProducerInterface<any> {
-    if (!this.instances.has(instanceKey)) {
-      const [name, configKey] = instanceKey.split('_');
-      if (name === 'kafka') {
-        this.factoryKafka(configKey);
-      } else {
-        this.factoryMns(configKey);
-      }
-    }
+  ): Promise<ProducerInterface<any>> {
+    await this.ensureInstance(instanceKey);
     assert(this.instances.has(instanceKey), `Instance key ${instanceKey} incorrect`);
-    return (this.instances.get(instanceKey) as MessageQueueAdapterInterface).getProducer(queueName);
+    return (
+      this.instances.get(instanceKey) as MessageQueueAdapterInterface
+    ).getProducer(queueName);
   }
 
-  getConsumer(
+  async getConsumer(
     instanceKey: string = this.config.defaultInstance,
     queueName?: string,
-  ): ConsumerInterface<any> {
-    if (!this.instances.has(instanceKey)) {
-      const [name, configKey] = instanceKey.split('_');
-      if (name === 'kafka') {
-        this.factoryKafka(configKey);
-      } else {
-        this.factoryMns(configKey);
-      }
-    }
+  ): Promise<ConsumerInterface<any>> {
+    await this.ensureInstance(instanceKey);
     assert(this.instances.has(instanceKey), `Instance key ${instanceKey} incorrect`);
-    return (this.instances.get(instanceKey) as MessageQueueAdapterInterface).getConsumer(queueName);
+    return (
+      this.instances.get(instanceKey) as MessageQueueAdapterInterface
+    ).getConsumer(queueName);
   }
 }
 
 export class MessageTopic extends BaseMessageQueue {
-  /**
-   * @returns {MnsMessageQueue}
-   */
-  factoryMns(configKey = 'default') {
+  async factoryMns(configKey = 'default') {
     const name = 'mns';
-    const mnsAdapter = require('./mns_adapter').MnsMessageTopic;
-    MessageQueue.registerAdapter(name, mnsAdapter);
+    const { MnsMessageTopic: mnsAdapter } = await import('./mns_adapter.js');
+    MessageTopic.registerAdapter(name, mnsAdapter);
     return this.factoryAdapter(name, configKey, mnsAdapter);
   }
 
-  /**
-   * @returns {KafkaMessageQueue}
-   */
-  factoryKafka(configKey = 'default') {
+  async factoryKafka(configKey = 'default') {
     const name = 'kafka';
-    const kafkaAdapter = require('./kafka_adapter');
-    MessageQueue.registerAdapter(name, kafkaAdapter);
+    const { KafkaMessageTopic: kafkaAdapter } = await import('./kafka_adapter.js');
+    MessageTopic.registerAdapter(name, kafkaAdapter);
     return this.factoryAdapter(name, configKey, kafkaAdapter);
   }
 
@@ -128,8 +116,9 @@ export class MessageTopic extends BaseMessageQueue {
     queueName?: string,
   ): PublisherInterface<any> {
     assert(this.instances.has(instanceKey), 'MQ Adapter not inited');
-    return (this.instances.get(instanceKey) as MessageTopicAdapterInterface)
-      .getPublisher(queueName);
+    return (
+      this.instances.get(instanceKey) as MessageTopicAdapterInterface
+    ).getPublisher(queueName);
   }
 
   getSubcriber(
@@ -137,7 +126,8 @@ export class MessageTopic extends BaseMessageQueue {
     queueName?: string,
   ): SubscriberInterface<any> {
     assert(this.instances.has(instanceKey), 'MQ Adapter not inited');
-    return (this.instances.get(instanceKey) as MessageTopicAdapterInterface)
-      .getSubscriber(queueName);
+    return (
+      this.instances.get(instanceKey) as MessageTopicAdapterInterface
+    ).getSubscriber(queueName);
   }
 }

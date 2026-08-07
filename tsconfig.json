@@ -1,29 +1,27 @@
 {
   "compilerOptions": {
-    "module": "commonjs",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "outDir": "lib",
+    "rootDir": "src",
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "strict": true,
     "esModuleInterop": true,
-    "target": "ES2017",
-    "noImplicitAny": true,
-    "removeComments": false,
-    "moduleResolution": "node",
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "sourceMap": true,
-    "rootDir": "src",
-    "outDir": "lib",
-    "declaration": true,
+    "noImplicitAny": true,
+    "removeComments": false,
     "baseUrl": ".",
-    "skipLibCheck": true,
     "paths": {
-      "*": [
-        "src/@types/*",
-        "node_modules/*",
-      ]
+      "*": ["src/@types/*", "node_modules/*"]
     }
   },
-  "exclude": [
-    "examples/",
-    "node_modules",
-    "test"
-  ]
+  "include": ["src/**/*"],
+  "exclude": ["examples/", "node_modules", "lib"]
 }

@@ -1,23 +1,18 @@
-import MQ from '../src/';
-import Message, { CommandMessage } from '../src/message';
+import { createRequire } from 'node:module';
+import MQ from '../src/index.js';
+import Message, { CommandMessage } from '../src/message.js';
 
+const require = createRequire(import.meta.url);
 const manager = new MQ(
   require('./config'),
   console,
 );
-const producer = manager.getProducer();
+const producer = await manager.getProducer();
 
-(async () => {
-  // const msg = await producer.produce(new Message({ foo: 'bar' }));
-  // console.log('[%s] producing %o', producer.name, msg);
-  try {
-    const command = await producer
-      .produce(new CommandMessage({ name: 'hello:world', spec: { foo: 'bar' } }));
-    console.log('[%s] producing %o', producer.name, command);
-  } catch (e) {
-    console.error(e);
-  } finally {
-    // await producer.getClient().disconnect();
-    // process.exit(0);
-  }
-})();
+try {
+  const command = await producer
+    .produce(new CommandMessage({ name: 'hello:world', spec: { foo: 'bar' } }));
+  console.log('[%s] producing %o', producer.name, command);
+} catch (e) {
+  console.error(e);
+}

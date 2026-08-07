@@ -1,15 +1,22 @@
-import _ from 'lodash';
+import { createRequire } from 'node:module';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import {
   CONFIG_DEBUG,
   CONFIG_MECHANISMS,
   CONFIG_SECURITY_PROTOCOL,
   CONFIG_TRUE_FALSE,
-} from '../src/rdkafka/interfaces';
-import fs from 'fs';
+} from '../src/rdkafka/interfaces.js';
 
-let localConfig = {};
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const require = createRequire(import.meta.url);
+
+let localConfig: Record<string, any> = {};
 try {
-  fs.accessSync(__dirname + '/config.local.ts', fs.constants.F_OK);
+  fs.accessSync(path.join(__dirname, 'config.local.ts'), fs.constants.F_OK);
   localConfig = require('./config.local');
 } catch (e) {
   console.error(e);

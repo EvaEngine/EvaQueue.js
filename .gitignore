@@ -38,12 +38,24 @@ bower_components
 .node_repl_history
 
 .idea/*
-yarn.lock
 /coverage
 .DS_Store
 src/config/config.local*
 src/config/sequelize.json
 lib/*
-.nyc_output
 examples/config.local.ts
-index.d.ts
+
+# pnpm
+node_modules/
+*.tsbuildinfo
+
+# Generated test artifacts
+test/*.js
+test/*.d.ts
+test/*.js.map
+test/*.d.ts.map
+test/**/*.js
+test/**/*.d.ts
+test/**/*.js.map
+test/**/*.d.ts.map
+test/*.map

@@ -1,5 +1,5 @@
 import test from 'ava';
-import { toSnakeCase, toCamelCase } from '../../src/utils/case_converter';
+import { toSnakeCase, toCamelCase } from '../../src/utils/case_converter.js';
 
 test('toSnakeCase', async (t) => {
   t.deepEqual(

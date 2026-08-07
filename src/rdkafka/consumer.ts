@@ -1,22 +1,20 @@
-import * as _ from 'lodash';
+import _ from 'lodash';
 import * as Kafka from 'node-rdkafka';
 
-import {
+import type {
   RDTopicPartitionInterface,
   RDKafkaMetadataInterface,
   RDKafkaMessageInterface,
-  RDKafkaMessageErrorInterface,
   RDKafkaConsumerConfigInterface,
-} from './interfaces';
+} from './interfaces.js';
 import {
   ConnectingError,
   DisconnectError,
-  ConnectionNotReadyError,
   ConnectionDeadError,
   ConsumerRuntimeError,
   MetadataError,
   SeekError,
-} from './errors';
+} from './errors.js';
 
 const SEEK_TIMEOUT = 1000;
 const ERROR_CODES = Kafka.CODES.ERRORS;
@@ -59,34 +57,35 @@ export abstract class KafkaBasicConsumer {
       }
     });
 
-    this.consumer = new Kafka.KafkaConsumer(conf, topicConf);
+    this.consumer = new Kafka.KafkaConsumer(conf as any, topicConf);
 
     // this.setGracefulDeath();
   }
 
-  abstract async gracefulDead(): Promise<boolean>;
+  abstract gracefulDead(): Promise<boolean>;
 
   disconnect() {
-    return new Promise((resolve, reject) => {
-      return this.consumer.disconnect((err, data) => {
+    return new Promise<void>((resolve, reject) => {
+      this.consumer.disconnect((err: any, _data: any) => {
         if (err) {
           reject(new DisconnectError(err.message));
+        } else {
+          console.log('Consumer disconnect success');
+          resolve();
         }
-        console.log('Consumer disconnect success');
-        resolve(data);
       });
     });
   }
 
   // rebalancing is managed internally by librdkafka by default
   async connect(metadataOptions: any = {}) {
-    return new Promise((resolve, reject) => {
-      this.consumer.connect(metadataOptions, (err, data) => {
+    return new Promise<void>((resolve, reject) => {
+      this.consumer.connect(metadataOptions, (err: any, _data) => {
         if (err) {
           reject(new ConnectingError(err.message));
+        } else {
+          resolve();
         }
-
-        resolve(data);
       });
     });
   }
@@ -98,17 +97,17 @@ export abstract class KafkaBasicConsumer {
       await this.disconnect();
       process.exit(0);
     };
-    process.on('SIGINT', gracefulDeath);
-    process.on('SIGQUIT', gracefulDeath);
-    process.on('SIGTERM', gracefulDeath);
+    process.on('SIGINT', () => { void gracefulDeath(); });
+    process.on('SIGQUIT', () => { void gracefulDeath(); });
+    process.on('SIGTERM', () => { void gracefulDeath(); });
   }
 
-  async subscribe(topics: string[]) {
+  subscribe(topics: string[]) {
     this.topics = _.uniq(_.concat(topics, this.topics));
     // synchronously
     this.consumer.subscribe(this.topics);
     // refresh offset
-    await this.initOffsetStroe();
+    void this.initOffsetStroe();
   }
 
   unsubscribe() {
@@ -117,23 +116,25 @@ export abstract class KafkaBasicConsumer {
   }
 
   getMetadata(metadataOptions: any): Promise<RDKafkaMetadataInterface> {
-    return new Promise((resolve, reject) => {
-      this.consumer.getMetadata(metadataOptions, (err: Error, data: RDKafkaMetadataInterface) => {
+    return new Promise<RDKafkaMetadataInterface>((resolve, reject) => {
+      this.consumer.getMetadata(metadataOptions, (err: any, data) => {
         if (err) {
           reject(new MetadataError(err.message));
+        } else {
+          resolve(data);
         }
-        resolve(data);
       });
     });
   }
 
   seek(toppar: RDTopicPartitionInterface, timeout: number) {
-    return new Promise((resolve, reject) => {
-      this.consumer.seek(toppar, timeout, (err: Error) => {
+    return new Promise<void>((resolve, reject) => {
+      this.consumer.seek(toppar, timeout, (err: any) => {
         if (err) {
           reject(new SeekError(err.message));
+        } else {
+          resolve();
         }
-        resolve();
       });
     });
   }
@@ -188,18 +189,18 @@ export abstract class KafkaBasicConsumer {
 // `At Most Once` Consumer
 export default class RDKafkaConsumer extends KafkaBasicConsumer {
   constructor(conf: RDKafkaConsumerConfigInterface, topicConf: any = {}) {
-    ifNotExistedAndSet(conf, 'enable.auto.commit', true);
-    ifNotExistedAndSet(conf, 'enable.auto.offset.store', true);
+    ifNotExistedAndSet(conf, 'enable.auto.commit', true as any);
+    ifNotExistedAndSet(conf, 'enable.auto.offset.store', true as any);
     ifNotExistedAndSet(conf, 'auto.commit.interval.ms', 500);
 
     super(conf, topicConf);
   }
 
-  async gracefulDead(): Promise<boolean> {
-    return true;
+  gracefulDead(): Promise<boolean> {
+    return Promise.resolve(true);
   }
 
-  async subscribe(topics: string[]) {
+  subscribe(topics: string[]) {
     this.topics = _.uniq(_.concat(topics, this.topics));
     // synchronously
     this.consumer.subscribe(this.topics);
@@ -212,26 +213,31 @@ export default class RDKafkaConsumer extends KafkaBasicConsumer {
     let success = true;
     return new Promise<boolean>((resolve, reject) => {
       // This will keep going until it gets ERR__PARTITION_EOF or ERR__TIMED_OUT
-      return this.consumer
-        .consume(size, async (err: Error, messages: RDKafkaMessageInterface[]) => {
+      this.consumer
+        .consume(size, (err: any, messages) => {
           if (this.dead) {
             reject(new ConnectionDeadError('Connection has been dead or is dying'));
+            return;
           }
           if (err) {
             reject(new ConsumerRuntimeError(err.message));
+            return;
           }
-          try {
-            await Promise.all(messages.map(async (message) => {
-              try {
-                await Promise.resolve(cb(message));
-              } catch (e) {
-                success = false;
-              }
-            }));
-          } catch (e) {
-            reject(new ConsumerRuntimeError(err.message));
-          }
-          return resolve(success);
+          void (async () => {
+            try {
+              await Promise.all(messages.map(async (message) => {
+                try {
+                  await Promise.resolve(cb(message as unknown as RDKafkaMessageInterface));
+                } catch {
+                  success = false;
+                }
+              }));
+            } catch (_e) {
+              reject(new ConsumerRuntimeError(String(_e)));
+              return;
+            }
+            resolve(success);
+          })();
         });
     });
   }

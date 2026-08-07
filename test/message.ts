@@ -1,5 +1,5 @@
 import test from 'ava';
-import Message, { CommandMessage } from '../src/message';
+import Message, { CommandMessage } from '../src/message.js';
 
 test('message', async (t) => {
   const msg = new Message({ foo: 'bar' });

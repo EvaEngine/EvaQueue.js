@@ -1,20 +1,16 @@
-import RDKafkaProducer from '../src/rdkafka/producer';
-import crypto from 'crypto';
+import { createRequire } from 'node:module';
+import crypto from 'node:crypto';
+import RDKafkaProducer from '../src/rdkafka/producer.js';
 
+const require = createRequire(import.meta.url);
 const config = require('./config');
-const producer = new RDKafkaProducer(Object.assign(config.kafka.default.connection, config.kafka.default.producer));
-let i = 0;
+const producer = new RDKafkaProducer({ ...config.kafka.default.connection, ...config.kafka.default.producer });
 
-(async () => {
-  await producer.connect();
-  console.log('connected');
-  // while (true) {
-  const msg = `NO.${i} ${new Date().getTime()}-${crypto.randomBytes(20).toString('hex')}`;
-  await producer.produce({
-    topic: 'alikafka-crawler-appstores-test',
-    value: Buffer.from(JSON.stringify(msg)),
-  });
-  console.log('produced', msg);
-  i += 1;
-  // }
-})();
+await producer.connect();
+console.log('connected');
+const msg = `NO.0 ${Date.now()}-${crypto.randomBytes(20).toString('hex')}`;
+await producer.produce({
+  topic: 'alikafka-crawler-appstores-test',
+  value: Buffer.from(JSON.stringify(msg)),
+});
+console.log('produced', msg);

@@ -1,5 +1,5 @@
-import Message, { CommandMessage } from './message';
-import {
+import Message, { CommandMessage } from './message.js';
+import type {
   Constructor,
   ConfigInterface,
   ConsumerInterface,
@@ -10,17 +10,17 @@ import {
   PublisherInterface,
   SubscriberInterface,
   MessageTopicAdapterInterface,
-} from './interfaces';
-import {
+} from './interfaces.js';
+import type {
   RDKafkaConsumerConfigInterface,
   RDKafkaProducerConfigInterface,
   RDKafkaMessageInterface,
   RDKafkaConfigInterface,
-} from './rdkafka/interfaces';
-import RDKafkaProducer from './rdkafka/producer';
-import RDKafkaConsumer from './rdkafka/consumer';
-import Signals = NodeJS.Signals;
-import Timer = NodeJS.Timer;
+} from './rdkafka/interfaces.js';
+import RDKafkaProducer from './rdkafka/producer.js';
+import RDKafkaConsumer from './rdkafka/consumer.js';
+import os from 'node:os';
+import type { Signals } from './types.js';
 
 export interface KafkaConfigInterface extends ConfigInterface {
   connection: RDKafkaConfigInterface;
@@ -31,8 +31,8 @@ export interface KafkaConfigInterface extends ConfigInterface {
 }
 
 export class KafkaCommandMessage extends CommandMessage {
-  offset: number;
-  partition: number;
+  offset!: number;
+  partition!: number;
 
   toRawMessage(): RDKafkaMessageInterface {
     return {
@@ -47,8 +47,8 @@ export class KafkaCommandMessage extends CommandMessage {
 }
 
 export class KafkaMessage extends Message {
-  offset: number;
-  partition: number;
+  offset!: number;
+  partition!: number;
 
   toRawMessage(): RDKafkaMessageInterface {
     return {
@@ -97,8 +97,8 @@ export class KafkaProducer implements ProducerInterface<RDKafkaProducer> {
   }) {
     this.client = input.client;
     this.logger = input.logger;
-    this.queue = input.queue;
-    this.name = process.env.PRODUCER_NAME || `PKafka-${require('os').hostname()}-${process.pid}`;
+    this.queue = input.queue ?? '';
+    this.name = process.env.PRODUCER_NAME || `PKafka-${os.hostname()}-${process.pid}`;
   }
 
   async connect() {
@@ -144,7 +144,7 @@ export class KafkaProducer implements ProducerInterface<RDKafkaProducer> {
 export class KafkaConsumer implements ConsumerInterface<RDKafkaConsumer> {
   client: RDKafkaConsumer;
   logger: LoggerInterface;
-  connected: Boolean = false;
+  connected: boolean = false;
   queue: string;
   name: string;
   stopped: boolean = false;
@@ -153,8 +153,8 @@ export class KafkaConsumer implements ConsumerInterface<RDKafkaConsumer> {
   constructor(input: { client: RDKafkaConsumer, logger: LoggerInterface, queue?: string }) {
     this.client = input.client;
     this.logger = input.logger;
-    this.queue = input.queue;
-    this.name = process.env.CONSUMER_NAME || `CKafka-${require('os').hostname()}-${process.pid}`;
+    this.queue = input.queue ?? '';
+    this.name = process.env.CONSUMER_NAME || `CKafka-${os.hostname()}-${process.pid}`;
   }
 
   getClient() {
@@ -169,48 +169,50 @@ export class KafkaConsumer implements ConsumerInterface<RDKafkaConsumer> {
     return this;
   }
 
-  async receive(): Promise<MessageInterface> {
+  receive(): Promise<MessageInterface> {
     throw new Error('Kafka adapter not support yet');
   }
 
-  async commit(message: MessageInterface) {
+  commit(_message: MessageInterface): void {
     throw new Error('Kafka adapter not support yet');
   }
 
-  async consume(): Promise<MessageInterface> {
+  consume(): Promise<MessageInterface> {
     throw new Error('Kafka adapter not support yet');
   }
 
   receiving(
-    callback: (err: Error, msg: MessageInterface) => {},
-    maxProcessing: Number = 3,
+    callback: (err: Error | null, msg: MessageInterface) => void,
+    _maxProcessing: number = 3,
   ) {
   }
 
   consuming(
-    callback: (err: Error, msg: MessageInterface) => {},
+    callback: (err: Error | null, msg: MessageInterface) => void,
     maxProcessing: number = 3,
     queue?: string,
   ) {
-    this.connect().then(() => {
-      const topics = [
+    void this.connect().then(() => {
+      const topics: string[] = [
         queue || this.queue,
       ];
       this.logger.debug('[%s] connected, subscribing %s', this.name, topics);
-      return this.client.subscribe(topics);
-    }).then(async () => {
+      this.client.subscribe(topics);
+    }).then(() => {
       this.stopped = false;
       this.logger.debug('[%s] start consuming', this.name);
       while (this.stopped === false) {
         this.processing = maxProcessing;
-        await this.client.consume(
-          async (rdMessage: RDKafkaMessageInterface) => {
-            await callback(null, KafkaMessage.factory(rdMessage));
+        void this.client.consume(
+          (rdMessage: any) => {
+            void callback(null, KafkaMessage.factory(rdMessage));
             this.processing -= 1;
           },
           maxProcessing,
         );
       }
+    }).catch((err: Error) => {
+      this.logger.error('[%s] consuming error %s', this.name, err.message);
     });
   }
 
@@ -222,7 +224,7 @@ export class KafkaConsumer implements ConsumerInterface<RDKafkaConsumer> {
   ) {
     this.logger.info('[%s] received signal %s, start exiting', this.name, signal);
     let checkCount: number = 0;
-    let handle: Timer;
+    let handle: ReturnType<typeof setInterval>;
     this.stopped = true;
     this.client.disconnect().then(() => {
       handle = setInterval(
@@ -294,7 +296,7 @@ export class KafkaPublisher extends KafkaProducer implements PublisherInterface<
 
 export class KafkaSubscriber extends KafkaConsumer implements SubscriberInterface<RDKafkaConsumer> {
   subscribing(
-    callback: (err: Error, msg: MessageInterface) => {},
+    callback: (err: Error | null, msg: MessageInterface) => void,
     maxProcessing: number = 3,
     queue?: string,
   ) {

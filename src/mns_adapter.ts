@@ -1,7 +1,8 @@
-import AliMNS from 'ali-mns';
-import Message, { CommandMessage } from './message';
-import { toCamelCase } from './utils/case_converter';
-import {
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const AliMNS = require('ali-mns');
+import Message, { CommandMessage } from './message.js';
+import { toCamelCase } from './utils/case_converter.js';
+import type {
   Constructor,
   ConfigInterface,
   ConsumerInterface,
@@ -12,9 +13,9 @@ import {
   ProducerInterface,
   PublisherInterface,
   SubscriberInterface,
-} from './interfaces';
-import Timer = NodeJS.Timer;
-import Signals = NodeJS.Signals;
+} from './interfaces.js';
+import os from 'node:os';
+import type { Signals } from './types.js';
 
 export interface MnsConfigInterface extends ConfigInterface {
   connection: {
@@ -77,15 +78,15 @@ export class MnsMessage extends Message {
   }
 }
 
-export class MnsProducer implements ProducerInterface<AliMNS.MQ> {
-  client: AliMNS.MQ;
+export class MnsProducer implements ProducerInterface<any> {
+  client: any;
   logger: LoggerInterface;
   name: string;
 
-  constructor(input: { client: AliMNS.MQ, logger: LoggerInterface }) {
+  constructor(input: { client: any, logger: LoggerInterface }) {
     this.client = input.client;
     this.logger = input.logger;
-    this.name = process.env.PRODUCER_NAME || `PMns-${require('os').hostname()}-${process.pid}`;
+    this.name = process.env.PRODUCER_NAME || `PMns-${os.hostname()}-${process.pid}`;
   }
 
   getClient() {
@@ -114,19 +115,19 @@ export class MnsProducer implements ProducerInterface<AliMNS.MQ> {
   }
 }
 
-export class MnsConsumer implements ConsumerInterface<AliMNS.MQ> {
+export class MnsConsumer implements ConsumerInterface<any> {
   name: string;
-  client: AliMNS.MQ;
+  client: any;
   logger: LoggerInterface;
-  processing: 0;
+  processing: number = 0;
 
-  paused: Boolean = false;
-  stopped: Boolean = false;
+  paused: boolean = false;
+  stopped: boolean = false;
 
-  constructor(input: { client: AliMNS.MQ, logger: LoggerInterface }) {
+  constructor(input: { client: any, logger: LoggerInterface }) {
     this.client = input.client;
     this.logger = input.logger;
-    this.name = process.env.CONSUMER_NAME || `CMns-${require('os').hostname()}-${process.pid}`;
+    this.name = process.env.CONSUMER_NAME || `CMns-${os.hostname()}-${process.pid}`;
   }
 
   getClient() {
@@ -144,21 +145,21 @@ export class MnsConsumer implements ConsumerInterface<AliMNS.MQ> {
   }
 
   private getReceiver(
-    callback: (err: Error, msg: Message | CommandMessage) => {},
-    maxProcessing: Number = 3,
-    autoConsume: Boolean = false,
+    callback: (err: Error | null, msg: Message | CommandMessage) => void,
+    maxProcessing: number = 3,
+    autoConsume: boolean = false,
   ) {
     this.processing = 0;
-    const receiver = (err: Error, mnsRawMessage: MnsRawMessageInterface) => {
-      (async () => {
+    const receiver = (err: Error | null, mnsRawMessage: MnsRawMessageInterface) => {
+      void (() => {
         this.processing += 1;
         if (this.processing >= maxProcessing) {
-          await this.pause();
+          void this.pause();
         }
         try {
-          await callback(
+          void callback(
             err,
-            mnsRawMessage ? MnsMessage.factory(mnsRawMessage) : null,
+            mnsRawMessage ? MnsMessage.factory(mnsRawMessage) : null as any,
           );
         } finally {
           this.processing -= 1;
@@ -179,27 +180,28 @@ export class MnsConsumer implements ConsumerInterface<AliMNS.MQ> {
     return MnsMessage.factory(rawMessage);
   }
 
-  async commit(message: MessageInterface) {
+  commit(message: MessageInterface): void {
     this.client.deleteP(message.ack);
   }
 
-  async consume(): Promise<MessageInterface> {
-    const rawMessage = await this.client.recvP();
-    const message = MnsMessage.factory(rawMessage);
-    await this.commit(message);
-    return message;
+  consume(): Promise<MessageInterface> {
+    return this.client.recvP().then((rawMessage: any) => {
+      const message = MnsMessage.factory(rawMessage);
+      this.commit(message);
+      return message;
+    });
   }
 
   receiving(
-    callback: (err: Error, msg: MessageInterface) => {},
-    maxProcessing: Number = 3,
+    callback: (err: Error | null, msg: MessageInterface) => void,
+    maxProcessing: number = 3,
   ) {
     return this.client.notifyRecv(this.getReceiver(callback, maxProcessing, false));
   }
 
   consuming(
-    callback: (err: Error, msg: Message | CommandMessage) => {},
-    maxProcessing: Number = 3,
+    callback: (err: Error | null, msg: Message | CommandMessage) => void,
+    maxProcessing: number = 3,
   ) {
     return this.client.notifyRecv(this.getReceiver(callback, maxProcessing, true));
   }
@@ -212,7 +214,7 @@ export class MnsConsumer implements ConsumerInterface<AliMNS.MQ> {
   ) {
     this.logger.info('[%s] received signal %s, start exiting', this.name, signal);
     let checkCount: number = 0;
-    let handle: Timer;
+    let handle: ReturnType<typeof setInterval>;
     this.stop().then(() => {
       handle = setInterval(
         () => {
@@ -258,15 +260,15 @@ export class MnsConsumer implements ConsumerInterface<AliMNS.MQ> {
   }
 }
 
-export class MnsPublisher implements PublisherInterface<AliMNS.Topic> {
-  client: AliMNS.Topic;
+export class MnsPublisher implements PublisherInterface<any> {
+  client: any;
   logger: LoggerInterface;
   name: string;
 
-  constructor(input: { client: AliMNS.Topic, logger: LoggerInterface }) {
+  constructor(input: { client: any, logger: LoggerInterface }) {
     this.client = input.client;
     this.logger = input.logger;
-    this.name = process.env.PRODUCER_NAME || `PubMns-${require('os').hostname()}-${process.pid}`;
+    this.name = process.env.PRODUCER_NAME || `PubMns-${os.hostname()}-${process.pid}`;
   }
 
   getClient() {
@@ -297,10 +299,10 @@ export class MnsPublisher implements PublisherInterface<AliMNS.Topic> {
   }
 }
 
-export class MnsSubscriber extends MnsConsumer implements SubscriberInterface<AliMNS.MQ> {
+export class MnsSubscriber extends MnsConsumer implements SubscriberInterface<any> {
   subscribing(
-    callback: (err: Error, msg: Message | CommandMessage) => {},
-    maxProcessing: Number = 3,
+    callback: (err: Error | null, msg: Message | CommandMessage) => void,
+    maxProcessing: number = 3,
   ) {
     return this.consuming(callback, maxProcessing);
   }

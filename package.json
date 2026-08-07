@@ -2,17 +2,35 @@
   "name": "evaqueue",
   "version": "0.0.0-development",
   "description": "EvaQueue.js provide a unified API across different high performance queue backends, including Kafka, AliMNS",
-  "main": "index.js",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./lib/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./message": {
+      "types": "./lib/message.d.ts",
+      "default": "./lib/message.js"
+    }
+  },
+  "main": "./lib/index.js",
+  "types": "./lib/index.d.ts",
+  "files": [
+    "lib/",
+    "package.json",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
-    "ava": "LOG_LEVEL=error NODE_ENV=test ava --verbose --serial",
-    "test": "nyc -a --reporter=lcov --reporter=text --reporter=html npm run ava",
-    "lint": "tslint src/**/*.ts --exclude '**/*.d.ts' --project tsconfig.json",
-    "build": "rm -rf lib && tsc -m \"System\" --outFile \"lib/index\" --sourceMap \"false\" && rm lib/index && mv lib/index.d.ts ./ && tsc",
-    "install:peers:ci": "npm install save $(jq -r '.peerDependencies | to_entries | map(\"\\(.key)@\\(.value | tostring)\") | join(\" \")' package.json)",
-    "install:peers": "npm install --no-save $(jq -r '.peerDependencies | to_entries | map(\"\\(.key)@\\(.value | tostring)\") | join(\" \")' package.json)",
-    "install:peers:mac": "CPPFLAGS=-I/usr/local/opt/openssl/include LDFLAGS=-L/usr/local/opt/openssl/lib npm install --no-save $(jq -r '.peerDependencies | to_entries | map(\"\\(.key)@\\(.value | tostring)\") | join(\" \")' package.json)",
-    "semantic-release": "semantic-release",
-    "travis-deploy-once": "travis-deploy-once"
+    "build": "tsc",
+    "clean": "rm -rf lib",
+    "test": "c8 ava",
+    "lint": "eslint src/ test/",
+    "lint:fix": "eslint src/ test/ --fix",
+    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
+    "format:check": "prettier --check \"src/**/*.ts\" \"test/**/*.ts\"",
+    "prepare": "husky",
+    "release": "semantic-release"
   },
   "repository": {
     "type": "git",
@@ -26,32 +44,23 @@
   },
   "homepage": "https://github.com/bmqb/EvaQueue.js#readme",
   "engines": {
-    "node": ">=8.0.0"
+    "node": ">=18.0.0"
   },
+  "packageManager": "pnpm@10.8.0",
   "ava": {
     "files": [
       "test/**/*.ts"
     ],
-    "sources": [
-      "src/**/*.ts"
+    "extensions": {
+      "ts": "module"
+    },
+    "nodeArguments": [
+      "--import=tsx"
     ],
     "failFast": false,
-    "tap": false,
-    "require": [
-      "ts-node/register"
-    ],
-    "extensions": [
-      "ts"
-    ],
-    "babel": false
+    "tap": false
   },
-  "nyc": {
-    "extension": [
-      ".ts"
-    ],
-    "require": [
-      "ts-node/register"
-    ],
+  "c8": {
     "include": [
       "src/**/*.ts"
     ],
@@ -59,29 +68,34 @@
       "lib/**/*",
       "src/@types/ali-mns/index.d.ts"
     ],
-    "sourceMap": true
+    "sourceMap": true,
+    "reporter": [
+      "lcov",
+      "text",
+      "html"
+    ]
   },
-  "pre-commit": [
-    "lint"
-  ],
   "dependencies": {
-    "lodash": "^4.17.11"
+    "lodash": "^4.17.21"
   },
   "peerDependencies": {
     "ali-mns": "^2.6.5",
     "node-rdkafka": "^2.3.3"
   },
   "devDependencies": {
-    "@types/lodash": "^4.14.118",
-    "@types/node": "^10.12.10",
-    "ava": "^1.0.0-beta.8",
-    "nyc": "^13.1.0",
-    "pre-commit": "^1.2.2",
-    "semantic-release": "^15.12.1",
-    "travis-deploy-once": "^5.0.9",
-    "ts-node": "^7.0.1",
-    "tslint": "^5.11.0",
-    "tslint-config-airbnb": "^5.11.1",
-    "typescript": "^3.1.6"
+    "@eslint/js": "^9.22.0",
+    "@types/lodash": "^4.17.15",
+    "@types/node": "^22.14.0",
+    "ava": "^6.3.0",
+    "c8": "^10.1.3",
+    "eslint": "^9.22.0",
+    "eslint-config-prettier": "^10.1.1",
+    "husky": "^9.1.7",
+    "lint-staged": "^15.5.0",
+    "prettier": "^3.5.3",
+    "semantic-release": "^24.2.3",
+    "tsx": "^4.19.3",
+    "typescript": "~5.8.3",
+    "typescript-eslint": "^8.28.0"
   }
 }

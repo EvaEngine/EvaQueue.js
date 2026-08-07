@@ -1,5 +1,4 @@
-import snakeCase from 'lodash/snakeCase';
-import camelCase from 'lodash/camelCase';
+import _ from 'lodash';
 
 /**
  * deeply converts keys of an object from one case to another
@@ -27,5 +26,5 @@ const convertCase = (oldObject: any, converterFunction: (v: string) => string) =
   return newObject;
 };
 
-export const toCamelCase = (obj: object) => convertCase(obj, camelCase);
-export const toSnakeCase = (obj: object) => convertCase(obj, snakeCase);
+export const toCamelCase = (obj: object) => convertCase(obj, (v: string) => _.camelCase(v));
+export const toSnakeCase = (obj: object) => convertCase(obj, (v: string) => _.snakeCase(v));

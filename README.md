@@ -1,8 +1,7 @@
 # EvaQueue.js
 
 [![NPM version](https://img.shields.io/npm/v/evaqueue.svg?style=flat-square)](http://badge.fury.io/js/evaqueue)
-[![Build Status](https://travis-ci.org/bmqb/EvaQueue.js.svg?branch=master)](https://travis-ci.org/bmqb/EvaQueue.js)
-[![Dependencies Status](https://david-dm.org/bmqb/EvaQueue.js.svg)](https://david-dm.org/bmqb/EvaQueue.js)
+[![CI](https://github.com/bmqb/EvaQueue.js/actions/workflows/ci.yml/badge.svg)](https://github.com/bmqb/EvaQueue.js/actions/workflows/ci.yml)
 [![npm](https://img.shields.io/npm/dm/evaqueue.svg?maxAge=2592000)](https://www.npmjs.com/package/evaqueue)
 [![License](https://img.shields.io/npm/l/evaqueue.svg?maxAge=2592000?style=plastic)](https://github.com/bmqb/EvaQueue.js/blob/master/LICENSE)
 
@@ -43,16 +42,10 @@ const manager = new MQ(
   require('./config'),
   console,
 );
-const producer = manager.getProducer();
+const producer = await manager.getProducer();
 
-(async () => {
-  try {
-    const msg = await producer.produce(new Message({ foo: 'bar' }));
-    console.log('[%s] producing %o', producer.name, msg);
-  } catch (e) {
-    console.error(e);
-  }
-})();
+const msg = await producer.produce(new Message({ foo: 'bar' }));
+console.log('[%s] producing %o', producer.name, msg);
 ```
 
 Consume messages from queue:
@@ -64,16 +57,14 @@ const manager = new MQ(
   require('./config'),
   console,
 );
-const consumer = manager.getConsumer();
+const consumer = await manager.getConsumer();
 
-(async () => {
-  await consumer.consuming(
-    async (err, message) => {
-      console.log('[%s] consuming %o', consumer.name, message);
-    },
-    3,
-  );
-})();
+await consumer.consuming(
+  async (err, message) => {
+    console.log('[%s] consuming %o', consumer.name, message);
+  },
+  3,
+);
 
 consumer.enableGracefulExit();
 ```
@@ -116,10 +107,10 @@ const consumer = manager.getConsumer('mns_another');
 ``` bash
 git clone git@github.com:bmqb/EvaQueue.js.git
 cd EvaQueue.js
-brew install jq
-npm install
-npm run install:peers
+pnpm install
 ```
 
+## Requirements
 
-node-rdkafka promisfy codes some from https://github.com/joway/node-kfk
+- Node.js >= 18.0.0
+- pnpm (recommended for development) or npm

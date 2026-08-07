@@ -1,16 +1,16 @@
-import { CommandMessageInterface, Constructor, MessageInterface } from './interfaces';
+import type { CommandMessageInterface, Constructor, MessageInterface } from './interfaces.js';
 
 export default class Message implements MessageInterface {
-  readonly messageId: string;
-  messageHash: string;
-  content: object;
-  priority: number;
-  delay: number;
-  traceId: string;
-  parentId: string;
-  enqueueAt: number;
-  ack: string;
-  queueName: string;
+  readonly messageId!: string;
+  messageHash!: string;
+  content: object = {};
+  priority: number = 0;
+  delay: number = 0;
+  traceId!: string;
+  parentId!: string;
+  enqueueAt: number = 0;
+  ack!: string;
+  queueName!: string;
 
   toRawMessage(): any {
     throw new Error('Message not able to convert by no implements toRawMessage');
@@ -99,16 +99,16 @@ export default class Message implements MessageInterface {
       traceId,
       parentId,
     } = msg;
-    this.queueName = queueName;
-    this.content = content || msg.content;
+    this.queueName = queueName ?? '';
+    this.content = content ?? msg.content ?? {};
     this.priority = priority;
     this.delay = delay;
-    this.messageId = messageId || Math.random().toString(36).slice(2);
-    this.messageHash = messageHash;
-    this.traceId = traceId || Math.random().toString(36).slice(2);
-    this.parentId = parentId;
-    this.ack = ack;
-    this.enqueueAt = enqueueAt || Math.floor(Date.now() / 1000);
+    this.messageId = messageId ?? Math.random().toString(36).slice(2);
+    this.messageHash = messageHash ?? '';
+    this.traceId = traceId ?? Math.random().toString(36).slice(2);
+    this.parentId = parentId ?? '';
+    this.ack = ack ?? '';
+    this.enqueueAt = enqueueAt ?? Math.floor(Date.now() / 1000);
   }
 }
 
