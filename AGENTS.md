@@ -58,7 +58,7 @@ pnpm release          # semantic-release 发布
 │   ├── kafka_adapter.ts          # Kafka 适配器
 │   ├── mns_adapter.ts            # AliMNS 适配器
 │   ├── types.ts                  # 共享类型
-│   ├── rdkafka/                  # node-rdkafka 封装
+│   ├── rdkafka/                  # @confluentinc/kafka-javascript 封装
 │   │   ├── producer.ts
 │   │   ├── consumer.ts
 │   │   ├── interfaces.ts
@@ -88,4 +88,4 @@ pnpm release          # semantic-release 发布
 4. **Node.js 协议**: 内置模块使用 `node:` 前缀 (`import fs from 'node:fs'`)
 5. **lodash**: 使用默认导入 `import _ from 'lodash'`
 6. **ali-mns**: 通过 `require('ali-mns')` 加载，类型为 `any`
-7. **node-rdkafka**: 通过 `as any` 类型断言处理类型不兼容
+7. **@confluentinc/kafka-javascript**: 内部封装，通过 `skipLibCheck` 处理类型

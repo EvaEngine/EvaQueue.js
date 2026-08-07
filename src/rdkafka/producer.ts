@@ -1,4 +1,4 @@
-import * as Kafka from 'node-rdkafka';
+import * as Kafka from '@confluentinc/kafka-javascript';
 import type {
   RDKafkaMessageInterface,
   RDKafkaProducerConfigInterface,

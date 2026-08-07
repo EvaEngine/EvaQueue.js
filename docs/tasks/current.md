@@ -22,6 +22,7 @@
 - ✅ 异步工厂方法
 - ✅ 代码现代化 (类型修复、导入规范)
 - ✅ 文档体系建立
+- ✅ `node-rdkafka` → `@confluentinc/kafka-javascript` 迁移
 
 ### 验证结果
 
@@ -33,5 +34,4 @@
 
 ### 下次任务 (一次只完成一个)
 
-1. 在对外接口不变的前提下，将依赖 `node-rdkafka` 改为 `@confluentinc/kafka-javascript`
-2. 加入对 NATS 消息队列的支持 ，使用 nats @nats-io/jetstream
+1. 加入对 NATS 消息队列的支持，使用 nats @nats-io/jetstream

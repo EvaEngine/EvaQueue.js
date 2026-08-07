@@ -16,11 +16,7 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "noImplicitAny": true,
-    "removeComments": false,
-    "baseUrl": ".",
-    "paths": {
-      "*": ["src/@types/*", "node_modules/*"]
-    }
+    "removeComments": false
   },
   "include": ["src/**/*"],
   "exclude": ["examples/", "node_modules", "lib"]

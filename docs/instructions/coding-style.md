@@ -79,7 +79,7 @@ let maxProcessing: Number = 3;
 ### any 的使用
 `any` 类型允许在以下场景使用：
 - 与 `ali-mns` 交互时（该库无类型定义）
-- 与 `node-rdkafka` 交互时（类型不兼容）
+- 与 `@confluentinc/kafka-javascript` 交互时（类型不兼容）
 - 泛型适配器接口 (`ProducerInterface<any>`)
 
 ### 未初始化属性

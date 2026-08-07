@@ -47,12 +47,17 @@
     "node": ">=24.0.0"
   },
   "packageManager": "pnpm@10.8.0",
-  "dependencies": {},
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@confluentinc/kafka-javascript"
+    ]
+  },
   "peerDependencies": {
-    "ali-mns": "^2.6.5",
-    "node-rdkafka": "^2.3.3"
+    "@confluentinc/kafka-javascript": "^1.10.0",
+    "ali-mns": "^2.6.5"
   },
   "devDependencies": {
+    "@confluentinc/kafka-javascript": "^1.10.0",
     "@eslint/js": "^9.22.0",
     "@types/node": "^24.0.0",
     "eslint": "^9.22.0",

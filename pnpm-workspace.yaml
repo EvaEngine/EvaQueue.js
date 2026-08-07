@@ -1,0 +1,2 @@
+ignoredBuiltDependencies:
+  - '@confluentinc/kafka-javascript'

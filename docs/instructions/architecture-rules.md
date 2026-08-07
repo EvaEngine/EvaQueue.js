@@ -14,7 +14,7 @@ EvaQueue.js 使用适配器模式抽象不同消息队列后端：
 │              MessageQueue / MessageTopic          │
 ├────────────────────┬─────────────────────────────┤
 │  KafkaAdapter      │  MnsAdapter                 │
-│  (node-rdkafka)    │  (ali-mns)                  │
+│  (kafka-javascript)│  (ali-mns)                  │
 ├────────────────────┴─────────────────────────────┤
 │  RDKafkaProducer / RDKafkaConsumer               │
 │  (底层封装)                                       │
@@ -26,7 +26,7 @@ EvaQueue.js 使用适配器模式抽象不同消息队列后端：
 1. **统一接口**: 所有适配器必须实现 `MessageQueueAdapterInterface` 或 `MessageTopicAdapterInterface`
 2. **延迟加载**: 适配器通过 `factoryKafka()` / `factoryMns()` 延迟加载，使用动态 `import()`
 3. **实例缓存**: 适配器实例缓存在 `BaseMessageQueue.instances` Map 中，避免重复创建
-4. **Peer 依赖**: `ali-mns` 和 `node-rdkafka` 是 peer 依赖，不由 EvaQueue 直接管理
+4. **Peer 依赖**: `ali-mns` 和 `@confluentinc/kafka-javascript` 是 peer 依赖，不由 EvaQueue 直接管理
 
 ## 模块边界
 
@@ -58,7 +58,7 @@ EvaQueue.js 使用适配器模式抽象不同消息队列后端：
 - `MnsProducer` / `MnsConsumer`: 具体实现
 - `MnsMessage` / `MnsCommandMessage`: MNS 特定消息
 
-### src/rdkafka/ — node-rdkafka 封装
+### src/rdkafka/ — @confluentinc/kafka-javascript 封装
 - `RDKafkaProducer`: 底层 Kafka Producer 封装
 - `RDKafkaConsumer`: 底层 Kafka Consumer 封装
 - 提供 Promise 化的回调 API

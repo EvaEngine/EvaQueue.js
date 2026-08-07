@@ -19,12 +19,12 @@ Features:
 ## Quick start
 
 ```
-npm install evaqueue ali-mns node-rdkafka
+npm install evaqueue ali-mns @confluentinc/kafka-javascript
 ```
 
 EvaQueue.js will installed as peer dependency, you are free to install queue libs which only required.
 
-NOTE: if install `node-rdkafka` met error `ld: symbol(s) not found for architecture x86_64`, try below command to fix
+NOTE: if install `@confluentinc/kafka-javascript` met error `ld: symbol(s) not found for architecture x86_64`, try below command to fix
 
 ```
 CPPFLAGS=-I/usr/local/opt/openssl/include LDFLAGS=-L/usr/local/opt/openssl/lib npm install
