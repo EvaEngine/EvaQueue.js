@@ -105,7 +105,7 @@ describe('MessageTopic (NATS)', () => {
     const adapter = new MockNatsTopicAdapter({}, silentLogger);
     topic.instances.set('nats_topic', adapter);
 
-    const subscriber = topic.getSubcriber();
+    const subscriber = topic.getSubscriber();
     assert.ok(subscriber instanceof MockNatsSubscriber);
     assert.strictEqual(subscriber, adapter.subscriber);
   });

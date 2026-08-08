@@ -140,7 +140,7 @@ export class MessageTopic extends BaseMessageQueue {
     ).getPublisher(queueName);
   }
 
-  getSubcriber(
+  getSubscriber(
     instanceKey: string = this.config.defaultInstance,
     queueName?: string,
   ): SubscriberInterface<any> {

@@ -37,7 +37,7 @@ describe('MessageTopic', () => {
     const adapter = new MockTopicAdapter({}, silentLogger);
     topic.instances.set('mock_topic', adapter);
 
-    const subscriber = topic.getSubcriber();
+    const subscriber = topic.getSubscriber();
     assert.ok(subscriber instanceof MockSubscriber);
     assert.strictEqual(subscriber, adapter.subscriber);
   });
@@ -57,7 +57,7 @@ describe('MessageTopic', () => {
     const topic = new MessageTopic(config, silentLogger);
 
     assert.throws(
-      () => topic.getSubcriber('nonexistent'),
+      () => topic.getSubscriber('nonexistent'),
       { message: /MQ Adapter not inited/ },
     );
   });
