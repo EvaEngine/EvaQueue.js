@@ -6,6 +6,7 @@ import type {
   RDKafkaMessageInterface,
   RDKafkaConsumerConfigInterface,
 } from './interfaces.js';
+import type { LoggerInterface } from '../interfaces.js';
 import {
   ConnectingError,
   DisconnectError,
@@ -17,6 +18,13 @@ import {
 
 const SEEK_TIMEOUT = 1000;
 const ERROR_CODES = Kafka.CODES.ERRORS;
+
+const silentLogger: LoggerInterface = {
+  debug: () => { /* no-op */ },
+  info: () => { /* no-op */ },
+  warn: () => { /* no-op */ },
+  error: () => { /* no-op */ },
+};
 
 const ifNotExistedAndSet = (conf: any, key: string, value: any) => {
   if (conf[key] === undefined) {
@@ -30,29 +38,31 @@ export abstract class KafkaBasicConsumer {
   public consumer: Kafka.KafkaConsumer;
   protected dead: boolean;
   protected topics: string[];
+  protected logger: LoggerInterface;
 
   protected offsetStore: { [key: string]: { [key: number]: number } } = {};
   protected errOffsetStore: { [key: string]: { [key: number]: number } } = {};
 
-  constructor(conf: RDKafkaConsumerConfigInterface, topicConf: any = {}) {
+  constructor(conf: RDKafkaConsumerConfigInterface, topicConf: any = {}, logger: LoggerInterface = silentLogger) {
     this.dead = false;
     this.topics = [];
+    this.logger = logger;
 
     ifNotExistedAndSet(conf, 'rebalance_cb', (err: any, assignment: any) => {
       if (err.code === ERROR_CODES.ERR__ASSIGN_PARTITIONS) {
         // Note: this can throw when you are disconnected. Take care and wrap it in
         // a try catch if that matters to you
         this.consumer.assign(assignment);
-        console.log('Consumer rebalanced at : ');
+        this.logger.info('Consumer rebalanced at : ');
         for (const assign of assignment) {
-          console.log(`   topic ${assign.topic}, partition: ${assign.partition}`);
+          this.logger.info(`   topic ${assign.topic}, partition: ${assign.partition}`);
         }
       } else if (err.code === ERROR_CODES.ERR__REVOKE_PARTITIONS) {
         // Same as above
         this.consumer.unassign();
       } else {
         // We had a real error
-        console.error(err);
+        this.logger.error(err);
       }
     });
 
@@ -67,7 +77,7 @@ export abstract class KafkaBasicConsumer {
         if (err) {
           reject(new DisconnectError(err.message));
         } else {
-          console.log('Consumer disconnect success');
+          this.logger.info('Consumer disconnect success');
           resolve();
         }
       });
@@ -173,12 +183,16 @@ export abstract class KafkaBasicConsumer {
 
 // `At Most Once` Consumer
 export default class RDKafkaConsumer extends KafkaBasicConsumer {
-  constructor(conf: RDKafkaConsumerConfigInterface, topicConf: any = {}) {
+  constructor(
+    conf: RDKafkaConsumerConfigInterface,
+    topicConf: any = {},
+    logger: LoggerInterface = silentLogger,
+  ) {
     ifNotExistedAndSet(conf, 'enable.auto.commit', true as any);
     ifNotExistedAndSet(conf, 'enable.auto.offset.store', true as any);
     ifNotExistedAndSet(conf, 'auto.commit.interval.ms', 500);
 
-    super(conf, topicConf);
+    super(conf, topicConf, logger);
   }
 
   gracefulDead(): Promise<boolean> {

@@ -117,10 +117,10 @@ export class NatsProducer implements ProducerInterface<any> {
     message.setQueueName(subject || this.subject);
 
     const rawMessage =
-      message instanceof NatsMessage
+      message instanceof NatsMessage || message instanceof NatsCommandMessage
         ? message.toRawMessage()
-        : message instanceof NatsCommandMessage
-          ? message.toRawMessage()
+        : message instanceof CommandMessage
+          ? message.downCasting(NatsCommandMessage).toRawMessage()
           : message.downCasting(NatsMessage).toRawMessage();
 
     await this.client.publish(subject || this.subject, rawMessage, {

@@ -17,6 +17,7 @@ export abstract class KafkaBasicProducer {
   public client: Kafka.Producer;
   protected dead: boolean;
   protected flushing: boolean;
+  private flushPromise: Promise<void> | null = null;
 
   constructor(conf: RDKafkaProducerConfigInterface, topicConf: any = {}) {
     this.dead = false;
@@ -39,13 +40,14 @@ export abstract class KafkaBasicProducer {
   }
 
   async flush(timeout: number) {
-    if (this.flushing) {
-      return;
+    if (this.flushPromise) {
+      return this.flushPromise;
     }
     this.flushing = true;
-    return new Promise<void>((resolve, reject) => {
+    this.flushPromise = new Promise<void>((resolve, reject) => {
       this.client.flush(timeout, (err: any) => {
         this.flushing = false;
+        this.flushPromise = null;
         if (err) {
           reject(new ProducerFlushError(err.message));
         } else {
@@ -53,6 +55,7 @@ export abstract class KafkaBasicProducer {
         }
       });
     });
+    return this.flushPromise;
   }
 
   connect(metadataOptions: any = {}) {

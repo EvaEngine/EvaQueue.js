@@ -41,7 +41,7 @@ export class KafkaCommandMessage extends CommandMessage {
       offset: this.offset,
       partition: this.partition,
       key: this.getMessageId(),
-      timestamp: this.getEnqueueAt(),
+      timestamp: this.getEnqueueAt() * 1000,
     };
   }
 }
@@ -57,7 +57,7 @@ export class KafkaMessage extends Message {
       offset: this.offset,
       partition: this.partition,
       key: this.getMessageId(),
-      timestamp: this.getEnqueueAt(),
+      timestamp: this.getEnqueueAt() * 1000,
     };
   }
 
@@ -313,6 +313,8 @@ export class KafkaMessageTopic implements MessageTopicAdapterInterface {
       logger,
       client: new RDKafkaConsumer(
         Object.assign({}, config.connection, config.consumer),
+        {},
+        logger,
       ),
       queue: topicName,
     });
@@ -353,6 +355,8 @@ export default class KafkaMessageQueue implements MessageQueueAdapterInterface {
       logger,
       client: new RDKafkaConsumer(
         Object.assign({}, config.connection, config.consumer),
+        {},
+        logger,
       ),
       queue: queueName,
     });

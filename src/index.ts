@@ -42,11 +42,13 @@ abstract class BaseMessageQueue {
     return instance;
   }
 
-  protected async ensureInstance(instanceKey: string): Promise<void> {
-    if (this.instances.has(instanceKey)) {
+  protected async ensureInstance(instanceKey?: string): Promise<void> {
+    if (typeof instanceKey !== 'string' || this.instances.has(instanceKey)) {
       return;
     }
-    const [name, configKey] = instanceKey.split('_');
+    const lastSeparator = instanceKey.lastIndexOf('_');
+    const name = lastSeparator === -1 ? instanceKey : instanceKey.slice(0, lastSeparator);
+    const configKey = lastSeparator === -1 ? 'default' : instanceKey.slice(lastSeparator + 1);
     if (name === 'kafka') {
       await this.factoryKafka(configKey);
     } else if (name === 'mns') {
