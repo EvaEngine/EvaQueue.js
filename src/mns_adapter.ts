@@ -1,5 +1,7 @@
+import { createRequire } from 'node:module';
+
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const AliMNS = require('ali-mns');
+const AliMNS = createRequire(import.meta.url)('ali-mns');
 import Message, { CommandMessage } from './message.js';
 import { toCamelCase } from './utils/case_converter.js';
 import type {
