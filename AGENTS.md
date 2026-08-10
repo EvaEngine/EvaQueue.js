@@ -1,7 +1,7 @@
 # AGENTS.md
 
 ## 身份
-- 名称：EvaQueue.js（npm: `evaqueue`）
+- 名称：EvaQueue.js（npm: `evamq`）
 - 一句话：统一的高性能消息队列 API 抽象层（Kafka / AliMNS / NATS JetStream）
 - 类型：TypeScript 库（Pure ESM）
 - 阶段：已现代化；主干 `main`；仓库 https://github.com/EvaEngine/EvaQueue.js

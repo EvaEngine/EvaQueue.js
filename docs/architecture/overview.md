@@ -39,7 +39,7 @@ Message / CommandMessage (src/message.ts) 贯穿 produce/consume
 ```
 
 ### 发布物
-- 入口：`evaqueue`、`evaqueue/message`（`package.json` exports → `lib/`）
+- 入口：`evamq`、`evamq/message`（`package.json` exports → `lib/`）
 - 构建：`tsc` → `lib/`；无捆绑 peer
 
 ### 关键决策摘要

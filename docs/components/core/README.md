@@ -13,7 +13,7 @@
 
 ## 入口
 - 代码：`src/index.ts`, `src/interfaces.ts`, `src/types.ts`
-- 导出：`evaqueue` → MessageQueue；`MessageTopic` 命名导出
+- 导出：`evamq` → MessageQueue；`MessageTopic` 命名导出
 
 ## 关键行为
 - Queue：`getProducer`/`getConsumer` 为 **async**，内部 `ensureInstance`

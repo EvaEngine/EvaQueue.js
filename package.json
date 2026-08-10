@@ -1,7 +1,7 @@
 {
-  "name": "evaqueue",
+  "name": "evamq",
   "version": "0.0.0-development",
-  "description": "EvaQueue.js provide a unified API across different high performance queue backends, including Kafka, AliMNS",
+  "description": "EvaQueue.js — 统一的高性能消息队列 API 抽象层（Kafka / AliMNS / NATS JetStream）",
   "type": "module",
   "exports": {
     ".": {
@@ -57,6 +57,10 @@
     "@nats-io/jetstream": "^3.4.0",
     "@nats-io/transport-node": "^3.4.0",
     "ali-mns": "^2.6.5"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
   },
   "devDependencies": {
     "@confluentinc/kafka-javascript": "^1.10.0",

@@ -13,7 +13,7 @@
 
 ## 入口
 - 代码：`src/message.ts`
-- 包导出：`evaqueue/message`
+- 包导出：`evamq/message`
 
 ## 依赖
 → `interfaces.ts` 类型
