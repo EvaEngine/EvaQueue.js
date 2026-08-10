@@ -36,7 +36,7 @@
     "type": "git",
     "url": "https://github.com/EvaEngine/EvaQueue.js.git"
   },
-  "keywords": [],
+  "keywords": ["message-queue", "kafka", "ali-mns", "nats", "queue", "pubsub"],
   "license": "MIT",
   "author": "AlloVince",
   "bugs": {
