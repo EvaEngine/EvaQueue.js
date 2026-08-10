@@ -3,7 +3,7 @@
 [![NPM version](https://img.shields.io/npm/v/evaqueue.svg?style=flat-square)](http://badge.fury.io/js/evaqueue)
 [![CI](https://github.com/bmqb/EvaQueue.js/actions/workflows/ci.yml/badge.svg)](https://github.com/bmqb/EvaQueue.js/actions/workflows/ci.yml)
 [![npm](https://img.shields.io/npm/dm/evaqueue.svg?maxAge=2592000)](https://www.npmjs.com/package/evaqueue)
-[![License](https://img.shields.io/npm/l/evaqueue.svg?maxAge=2592000?style=plastic)](https://github.com/bmqb/EvaQueue.js/blob/master/LICENSE)
+[![License](https://img.shields.io/npm/l/evaqueue.svg?maxAge=2592000?style=plastic)](https://github.com/bmqb/EvaQueue.js/blob/main/LICENSE)
 
 
 EvaQueue.js provide a unified API across different high performance queue backends, including [Kafka](https://kafka.apache.org/), [AliMNS](https://www.alibabacloud.com/product/message-service) or other message queues which could be customized.

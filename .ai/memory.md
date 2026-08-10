@@ -17,7 +17,7 @@
 - `ali-mns` 非 ESM：仅允许 `createRequire(import.meta.url)('ali-mns')` + eslint-disable；不要改成顶层 static import。（Confirmed）
 - Kafka 原生依赖：`@confluentinc/kafka-javascript` 需编译；pnpm/npm 的 onlyBuiltDependencies 已放行；mac 上 openssl 链接失败见 README。（Confirmed）
 - 无运行时 `lodash` 依赖；case 转换用自研 `src/utils/case_converter.ts`，勿引入 lodash。（Confirmed）
-- 主干分支名是 `master` 不是 `main`；CI/release 跟 `master`。（Confirmed）
+- 主干分支名是 `main`；CI/release 跟 `main`。（Confirmed）
 - 对外仓库以 `EvaEngine/EvaQueue.js` 为准（package/git remote）；勿写回 bmqb 除非用户改 remote。（Confirmed）
 
 ## 调试手册

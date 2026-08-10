@@ -4,7 +4,7 @@
 - 名称：EvaQueue.js（npm: `evaqueue`）
 - 一句话：统一的高性能消息队列 API 抽象层（Kafka / AliMNS / NATS JetStream）
 - 类型：TypeScript 库（Pure ESM）
-- 阶段：已现代化；主干 `master`；仓库 https://github.com/EvaEngine/EvaQueue.js
+- 阶段：已现代化；主干 `main`；仓库 https://github.com/EvaEngine/EvaQueue.js
 - 运行时：Node.js >= 24；包管理 pnpm（本地）/ npm（CI 发布）
 
 ## 角色
@@ -50,7 +50,7 @@
 ## 工程要点
 - 遵循 `.ai/defaults/*`（偏好与 AI 行为）
 - 冲突优先级：代码 > 测试 > ADR/决策 > docs > memory
-- 主干为 `master`；Conventional Commits；发版 SemVer + semantic-release
+- 主干为 `main`；Conventional Commits；发版 SemVer + semantic-release
 - Pure ESM：相对导入带 `.js`；`import type`；内置模块 `node:` 前缀
 - 适配器 peer 依赖延迟 `import()`；`getProducer`/`getConsumer` 为 async
 - 文档是系统一部分：行为/接口/架构变了就更新 docs

@@ -21,4 +21,4 @@ node --import tsx/esm --test test/message.ts
 ```
 
 ## 发布
-推 `master` → CI build → `semantic-release`（需 secrets）。本地一般不手动 release。
+推 `main` → CI build → `semantic-release`（需 secrets）。本地一般不手动 release。
