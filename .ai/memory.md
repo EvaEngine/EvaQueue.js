@@ -19,7 +19,7 @@
 - 无运行时 `lodash` 依赖；case 转换用自研 `src/utils/case_converter.ts`，勿引入 lodash。（Confirmed）
 - 主干分支名是 `main`；CI/release 跟 `main`。（Confirmed）
 - 对外仓库以 `EvaEngine/EvaQueue.js` 为准（package/git remote）；勿写回 bmqb 除非用户改 remote。（Confirmed）
-- npm 包名 `evamq`（2026-08-10 发布 v1.0.0）；CI 通过 semantic-release 自动发布。（Confirmed）
+- npm 包名 `evamq`（2026-08-10 发布 v1.0.0，CI 自动发布 v2.0.4）；CI 通过 semantic-release 自动发布。（Confirmed）
 - GitHub 仓库 `EvaEngine/EvaQueue.js` 为 **public**（2026-08-10 从 private 改为 public），npm provenance 需要 public 仓库。（Confirmed）
 
 ## 调试手册
