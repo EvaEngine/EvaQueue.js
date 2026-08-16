@@ -45,9 +45,15 @@ export interface ConsumerInterface<C> {
 
   consume(): Promise<MessageInterface>;
 
-  receiving(callback: (err: Error | null, msg: MessageInterface) => void, maxProcessing: number): void;
+  receiving(
+    callback: (err: Error | null, msg: MessageInterface) => void | Promise<void>,
+    maxProcessing: number,
+  ): void;
 
-  consuming(callback: (err: Error | null, msg: MessageInterface) => void, maxProcessing: number): void;
+  consuming(
+    callback: (err: Error | null, msg: MessageInterface) => void | Promise<void>,
+    maxProcessing: number,
+  ): void;
 
   gracefulExit(): void;
 

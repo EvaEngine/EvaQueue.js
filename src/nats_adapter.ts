@@ -194,14 +194,14 @@ export class NatsConsumer implements ConsumerInterface<any> {
   }
 
   receiving(
-    _callback: (err: Error | null, msg: MessageInterface) => void,
+    _callback: (err: Error | null, msg: MessageInterface) => void | Promise<void>,
     _maxProcessing: number = 3,
   ): void {
     // Not implemented for NATS
   }
 
   consuming(
-    callback: (err: Error | null, msg: MessageInterface) => void,
+    callback: (err: Error | null, msg: MessageInterface) => void | Promise<void>,
     maxProcessing: number = 3,
     queue?: string,
   ): void {
@@ -233,17 +233,18 @@ export class NatsConsumer implements ConsumerInterface<any> {
 
       this.consumerMessages = await this.jsConsumer.consume({
         max_messages: maxProcessing,
-        callback: (jsMsg: any) => {
+        callback: async (jsMsg: any) => {
           this.processing += 1;
           try {
             const message = NatsMessage.factory(jsMsg);
             message.setQueueName(subject);
-            void callback(null, message);
+            await callback(null, message);
+            jsMsg.ack();
           } catch (e) {
             this.logger.error(
               '[%s] error processing message: %s',
               this.name,
-              (e as Error).message,
+              e instanceof Error ? e.message : String(e),
             );
           } finally {
             this.processing -= 1;
@@ -318,7 +319,7 @@ export class NatsPublisher extends NatsProducer implements PublisherInterface<an
 
 export class NatsSubscriber extends NatsConsumer implements SubscriberInterface<any> {
   subscribing(
-    callback: (err: Error | null, msg: MessageInterface) => void,
+    callback: (err: Error | null, msg: MessageInterface) => void | Promise<void>,
     maxProcessing: number = 3,
     queue?: string,
   ): void {

@@ -2,6 +2,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import MessageQueue, { MessageTopic } from '../src/index.js';
 import type { LoggerInterface, MessageInterface } from '../src/interfaces.js';
+import { NatsConsumer } from '../src/nats_adapter.js';
 import {
   MockNatsQueueAdapter,
   MockNatsTopicAdapter,
@@ -21,6 +22,108 @@ const silentLogger: LoggerInterface = {
   warn: () => { /* no-op */ },
   error: () => { /* no-op */ },
 };
+
+type MockJsMessage = {
+  data: Uint8Array;
+  seq: number;
+  subject: string;
+  ack: () => void;
+  nak: (millis?: number) => void;
+  term: () => void;
+  working: () => void;
+};
+
+type NatsConsumeCallback = (message: MockJsMessage) => Promise<void>;
+
+function createJsMessage() {
+  let ackCount = 0;
+  const message: MockJsMessage = {
+    data: Buffer.from(
+      JSON.stringify({
+        content: { foo: 'bar' },
+        messageId: 'nats-consume-1',
+        traceId: 'trace-1',
+      }),
+    ),
+    seq: 42,
+    subject: 'events.created',
+    ack: () => {
+      ackCount += 1;
+    },
+    nak: () => {
+      /* no-op */
+    },
+    term: () => {
+      /* no-op */
+    },
+    working: () => {
+      /* no-op */
+    },
+  };
+
+  return {
+    message,
+    getAckCount: () => ackCount,
+  };
+}
+
+async function createConsumerHarness(
+  callback: (err: Error | null, msg: MessageInterface) => void | Promise<void>,
+) {
+  const errors: unknown[][] = [];
+  const logger: LoggerInterface = {
+    ...silentLogger,
+    error: (...args: unknown[]) => {
+      errors.push(args);
+    },
+  };
+  const consumer = new NatsConsumer({
+    config: {
+      connection: {},
+      stream: 'events',
+      consumer: 'worker',
+      defaultQueueName: 'events.created',
+      defaultTopicName: 'events.created',
+    },
+    logger,
+    subject: 'events.created',
+    stream: 'events',
+    consumerName: 'worker',
+  });
+  let consumeCallback: NatsConsumeCallback | undefined;
+  let notifyReady: (() => void) | undefined;
+  const ready = new Promise<void>((resolve) => {
+    notifyReady = resolve;
+  });
+
+  consumer.connected = true;
+  consumer.client = {
+    consumers: {
+      get: async () => ({
+        consume: async (options: { callback: NatsConsumeCallback }) => {
+          consumeCallback = options.callback;
+          notifyReady?.();
+          return {
+            stop: () => {
+              /* no-op */
+            },
+          };
+        },
+      }),
+    },
+  };
+  consumer.consuming(callback);
+  await ready;
+
+  return {
+    consumer,
+    errors,
+    handle: (message: MockJsMessage) => {
+      assert.ok(consumeCallback);
+      return consumeCallback(message);
+    },
+  };
+}
 
 // ---------------------------------------------------------------------------
 // Tests: MessageQueue NATS mode
@@ -71,6 +174,70 @@ describe('MessageQueue (NATS)', () => {
     const consumer = adapter.getConsumer();
     const result = await consumer.receive();
     assert.ok(result);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Tests: NATS JetStream consumer acknowledgement
+// ---------------------------------------------------------------------------
+
+describe('NatsConsumer', () => {
+  it('converts the message and acknowledges once after a synchronous callback', async () => {
+    let received: MessageInterface | undefined;
+    const harness = await createConsumerHarness((_err, message) => {
+      received = message;
+    });
+    const jsMessage = createJsMessage();
+
+    await harness.handle(jsMessage.message);
+
+    assert.deepStrictEqual(received?.content, { foo: 'bar' });
+    assert.strictEqual(received?.queueName, 'events.created');
+    assert.strictEqual(jsMessage.getAckCount(), 1);
+    assert.strictEqual(harness.consumer.processing, 0);
+  });
+
+  it('keeps processing active and delays ack until an asynchronous callback resolves', async () => {
+    let resolveCallback: (() => void) | undefined;
+    const callbackPending = new Promise<void>((resolve) => {
+      resolveCallback = resolve;
+    });
+    const harness = await createConsumerHarness(async () => callbackPending);
+    const jsMessage = createJsMessage();
+
+    const handling = harness.handle(jsMessage.message);
+
+    assert.strictEqual(harness.consumer.processing, 1);
+    assert.strictEqual(jsMessage.getAckCount(), 0);
+
+    resolveCallback?.();
+    await handling;
+
+    assert.strictEqual(jsMessage.getAckCount(), 1);
+    assert.strictEqual(harness.consumer.processing, 0);
+  });
+
+  it('does not ack and logs synchronous throws and asynchronous rejections', async () => {
+    const failures = [
+      () => {
+        throw new Error('sync failure');
+      },
+      async () => {
+        throw new Error('async failure');
+      },
+    ];
+
+    for (const fail of failures) {
+      const harness = await createConsumerHarness(fail);
+      const jsMessage = createJsMessage();
+
+      await harness.handle(jsMessage.message);
+
+      assert.strictEqual(jsMessage.getAckCount(), 0);
+      assert.strictEqual(harness.consumer.processing, 0);
+      assert.strictEqual(harness.errors.length, 1);
+      assert.match(String(harness.errors[0]?.[2]), /failure/);
+    }
   });
 });
 
