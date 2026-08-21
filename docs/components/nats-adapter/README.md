@@ -9,6 +9,7 @@
 - 连接：`@nats-io/transport-node`；业务：`@nats-io/jetstream`（动态 import）
 - 队列/主题语义映射到 Stream + Consumer
 - Consumer 等待同步或异步业务回调成功完成后才 `ack()`；回调抛错或拒绝时记录错误并保留未确认状态，交由 JetStream 重投
+- Consumer 通过 `fetch({ max_messages })` 分批拉取消息，等待当前批次全部完成后再拉下一批；`maxProcessing` 是真实的并发上限
 - `processing` 覆盖完整业务回调与 ack 生命周期，优雅退出会等待处理中消息
 
 ## 边界

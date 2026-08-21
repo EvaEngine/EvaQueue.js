@@ -208,6 +208,7 @@ export class NatsConsumer implements ConsumerInterface<any> {
     void this.connect().then(async () => {
       this.stopped = false;
       const subject = queue || this.subject;
+      const processingLimit = Math.max(1, Number(maxProcessing) || 3);
 
       try {
         this.jsConsumer = await this.client.consumers.get(
@@ -231,26 +232,49 @@ export class NatsConsumer implements ConsumerInterface<any> {
         this.consumerName,
       );
 
-      this.consumerMessages = await this.jsConsumer.consume({
-        max_messages: maxProcessing,
-        callback: async (jsMsg: any) => {
-          this.processing += 1;
-          try {
-            const message = NatsMessage.factory(jsMsg);
-            message.setQueueName(subject);
-            await callback(null, message);
-            jsMsg.ack();
-          } catch (e) {
-            this.logger.error(
-              '[%s] error processing message: %s',
-              this.name,
-              e instanceof Error ? e.message : String(e),
+      try {
+        while (!this.stopped) {
+          const messages = await this.jsConsumer.fetch({
+            max_messages: processingLimit,
+            expires: 1000,
+          });
+          this.consumerMessages = messages;
+          const processing = [];
+
+          for await (const jsMsg of messages) {
+            processing.push(
+              (async () => {
+                this.processing += 1;
+                try {
+                  const message = NatsMessage.factory(jsMsg);
+                  message.setQueueName(subject);
+                  await callback(null, message);
+                  jsMsg.ack();
+                } catch (e) {
+                  this.logger.error(
+                    '[%s] error processing message: %s',
+                    this.name,
+                    e instanceof Error ? e.message : String(e),
+                  );
+                } finally {
+                  this.processing -= 1;
+                }
+              })(),
             );
-          } finally {
-            this.processing -= 1;
           }
-        },
-      });
+
+          await Promise.all(processing);
+          this.consumerMessages = undefined;
+        }
+      } catch (e) {
+        if (!this.stopped) {
+          this.logger.error(
+            '[%s] error consuming messages: %s',
+            this.name,
+            e instanceof Error ? e.message : String(e),
+          );
+        }
+      }
     }).catch((err: Error) => {
       this.logger.error('[%s] consuming error %s', this.name, err.message);
     });

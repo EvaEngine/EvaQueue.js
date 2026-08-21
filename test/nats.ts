@@ -31,9 +31,8 @@ type MockJsMessage = {
   nak: (millis?: number) => void;
   term: () => void;
   working: () => void;
+  getAckCount?: () => number;
 };
-
-type NatsConsumeCallback = (message: MockJsMessage) => Promise<void>;
 
 function createJsMessage() {
   let ackCount = 0;
@@ -62,7 +61,7 @@ function createJsMessage() {
   };
 
   return {
-    message,
+    message: { ...message, getAckCount: () => ackCount },
     getAckCount: () => ackCount,
   };
 }
@@ -90,8 +89,9 @@ async function createConsumerHarness(
     stream: 'events',
     consumerName: 'worker',
   });
-  let consumeCallback: NatsConsumeCallback | undefined;
   let notifyReady: (() => void) | undefined;
+  let resolveBatch: ((messages: MockJsMessage[]) => void) | undefined;
+  let firstFetch = true;
   const ready = new Promise<void>((resolve) => {
     notifyReady = resolve;
   });
@@ -100,10 +100,21 @@ async function createConsumerHarness(
   consumer.client = {
     consumers: {
       get: async () => ({
-        consume: async (options: { callback: NatsConsumeCallback }) => {
-          consumeCallback = options.callback;
+        fetch: async () => {
           notifyReady?.();
+          if (!firstFetch) {
+            await new Promise<void>(() => {
+              /* keep the consumer stopped between test batches */
+            });
+          }
+          firstFetch = false;
           return {
+            async *[Symbol.asyncIterator]() {
+              const messages = await new Promise<MockJsMessage[]>((resolve) => {
+                resolveBatch = resolve;
+              });
+              yield* messages;
+            },
             stop: () => {
               /* no-op */
             },
@@ -118,11 +129,21 @@ async function createConsumerHarness(
   return {
     consumer,
     errors,
-    handle: (message: MockJsMessage) => {
-      assert.ok(consumeCallback);
-      return consumeCallback(message);
+    handle: async (message: MockJsMessage) => {
+      assert.ok(resolveBatch);
+      resolveBatch([message]);
+      while (consumer.processing === 0 && messageAckCount(message) === 0 && errors.length === 0) {
+        await new Promise<void>((resolve) => setImmediate(resolve));
+      }
+      while (consumer.processing > 0) {
+        await new Promise<void>((resolve) => setImmediate(resolve));
+      }
     },
   };
+}
+
+function messageAckCount(message: MockJsMessage): number {
+  return message.getAckCount?.() ?? 0;
 }
 
 // ---------------------------------------------------------------------------
@@ -182,6 +203,80 @@ describe('MessageQueue (NATS)', () => {
 // ---------------------------------------------------------------------------
 
 describe('NatsConsumer', () => {
+  it('limits concurrent callbacks to the configured batch size', async () => {
+    const consumer = new NatsConsumer({
+      config: {
+        connection: {},
+        stream: 'events',
+        consumer: 'worker',
+        defaultQueueName: 'events.created',
+        defaultTopicName: 'events.created',
+      },
+      logger: silentLogger,
+      subject: 'events.created',
+      stream: 'events',
+      consumerName: 'worker',
+    });
+    let fetchCount = 0;
+    let active = 0;
+    let maximumActive = 0;
+    let started = 0;
+    let resolveStarted: (() => void) | undefined;
+    let resolveCallbacks: (() => void) | undefined;
+    const allStarted = new Promise<void>((resolve) => {
+      resolveStarted = resolve;
+    });
+    const callbacksReleased = new Promise<void>((resolve) => {
+      resolveCallbacks = resolve;
+    });
+
+    consumer.connected = true;
+    consumer.client = {
+      consumers: {
+        get: async () => ({
+          fetch: async (options: { max_messages: number }) => {
+            assert.strictEqual(options.max_messages, 2);
+            fetchCount += 1;
+            if (fetchCount > 1) {
+              await new Promise<void>(() => {
+                /* stop after the first batch */
+              });
+            }
+            return {
+              async *[Symbol.asyncIterator]() {
+                yield createJsMessage().message;
+                yield createJsMessage().message;
+              },
+              stop: () => {
+                /* no-op */
+              },
+            };
+          },
+        }),
+      },
+    };
+    consumer.consuming(async () => {
+      active += 1;
+      maximumActive = Math.max(maximumActive, active);
+      started += 1;
+      if (started === 2) {
+        resolveStarted?.();
+      }
+      await callbacksReleased;
+      active -= 1;
+    }, 2);
+
+    await allStarted;
+    assert.strictEqual(consumer.processing, 2);
+    assert.strictEqual(maximumActive, 2);
+    assert.strictEqual(fetchCount, 1);
+
+    resolveCallbacks?.();
+    while (consumer.processing > 0) {
+      await new Promise<void>((resolve) => setImmediate(resolve));
+    }
+  });
+
   it('converts the message and acknowledges once after a synchronous callback', async () => {
     let received: MessageInterface | undefined;
     const harness = await createConsumerHarness((_err, message) => {
@@ -206,6 +301,7 @@ describe('NatsConsumer', () => {
     const jsMessage = createJsMessage();
 
     const handling = harness.handle(jsMessage.message);
+    await new Promise<void>((resolve) => setImmediate(resolve));
 
     assert.strictEqual(harness.consumer.processing, 1);
     assert.strictEqual(jsMessage.getAckCount(), 0);
