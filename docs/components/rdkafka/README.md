@@ -13,7 +13,7 @@
 
 ## 入口
 - `src/rdkafka/{producer,consumer,interfaces,errors}.ts`
-- peer：`@confluentinc/kafka-javascript`；`skipLibCheck` 缓冲突
+- peer：`@confluentinc/kafka-javascript`；类型冲突由 `skipLibCheck` 缓冲。遇到 Kafka 类型缺口时，优先扩展此封装；局部 `any` 只能用于隔离第三方类型问题，不能散落到适配器或业务调用方。
 
 ## 相关
 - `docs/components/kafka-adapter/`

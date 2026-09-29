@@ -18,6 +18,6 @@
 | 常用命令 | `development/commands.md` |
 | 测试方式 | `development/testing.md` |
 | v1→v2 迁移 | `development/migration-v1-v2.md` |
-| 编码/架构约束（已并入上表与 defaults） | 见 components + architecture；行为偏好见 `.ai/defaults/` |
+| 编码/架构约束 | `../AGENTS.md`；实现细节见 components + architecture |
 
 无 `operations/`：本库不部署服务；发布见 development。
